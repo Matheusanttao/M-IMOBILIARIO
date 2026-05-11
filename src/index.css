@@ -1,0 +1,29 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Playfair Display', ui-serif, Georgia, serif;
+
+  --color-primary: #1a365d;
+  --color-primary-hover: #2c5282;
+  --color-accent: #d4a853;
+  --color-accent-hover: #b8923f;
+  --color-surface: #f7fafc;
+  --color-muted: #64748b;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-white font-sans text-slate-800 antialiased;
+  }
+}
+
+.property-gallery .swiper-pagination-bullet-active {
+  background-color: var(--color-accent);
+}
+.property-gallery .swiper-pagination-bullet {
+  background-color: rgba(26, 54, 93, 0.35);
+}
