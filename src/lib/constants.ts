@@ -1,4 +1,4 @@
-import type { PropertyPurpose, PropertyType } from '@/types'
+import type { ImovelStatus, PropertyPurpose, PropertyType } from '@/types'
 
 export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
   casa: 'Casa',
@@ -10,6 +10,14 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
 export const PURPOSE_LABELS: Record<PropertyPurpose, string> = {
   venda: 'Venda',
   aluguel: 'Aluguel',
+}
+
+export const IMOVEL_STATUS_LABELS: Record<ImovelStatus, string> = {
+  disponivel: 'Disponível',
+  reservado: 'Reservado',
+  vendido: 'Vendido',
+  alugado: 'Alugado',
+  oculto: 'Oculto',
 }
 
 export const PROPERTY_TYPES: { value: PropertyType; label: string }[] = (

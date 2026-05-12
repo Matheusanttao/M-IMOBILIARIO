@@ -6,47 +6,101 @@ export type PropertyType =
   | 'terreno'
   | 'sala_comercial'
 
-export type PropertyStatus = 'ativo' | 'inativo'
+/** Status público / operação */
+export type ImovelStatus =
+  | 'disponivel'
+  | 'reservado'
+  | 'vendido'
+  | 'alugado'
+  | 'oculto'
 
-export interface PropertyImageRow {
+export type UserRole = 'master' | 'admin' | 'gerente' | 'corretor'
+
+export type LeadStatus =
+  | 'novo'
+  | 'contatado'
+  | 'qualificado'
+  | 'negociacao'
+  | 'convertido'
+  | 'perdido'
+
+export interface ImovelImagemRow {
   id: string
-  property_id: string
-  image_url: string
+  imovel_id: string
+  url: string
   public_id: string
-  is_cover: boolean
+  is_capa: boolean
+  ordem: number
   created_at: string
 }
 
-export interface PropertyRow {
+export interface ImovelRow {
   id: string
-  title: string
-  description: string | null
-  type: PropertyType
-  purpose: PropertyPurpose
-  price: number
-  city: string
-  neighborhood: string
-  address: string | null
-  bedrooms: number
-  bathrooms: number
-  parking_spaces: number
+  empresa_id: string
+  corretor_id: string | null
+  proprietario_id: string | null
+  titulo: string
+  descricao: string | null
+  tipo: PropertyType
+  finalidade: PropertyPurpose
+  preco: number
+  cidade: string
+  bairro: string
+  endereco: string | null
+  quartos: number
+  suites: number
+  banheiros: number
+  vagas: number
   area: number | null
-  status: PropertyStatus
-  featured: boolean
-  user_id: string | null
+  status: ImovelStatus
+  destaque: boolean
+  slug: string | null
+  latitude: number | null
+  longitude: number | null
+  video_url: string | null
+  tour_virtual_url: string | null
+  seo_titulo: string | null
+  seo_descricao: string | null
+  visualizacoes: number
   created_at: string
   updated_at: string
-  property_images?: PropertyImageRow[]
+  imovel_imagens?: ImovelImagemRow[]
 }
 
 export interface LeadRow {
   id: string
-  property_id: string
+  empresa_id: string
+  imovel_id: string
+  corretor_id: string | null
   name: string
   phone: string | null
   email: string | null
   message: string | null
+  origem: string
+  status: LeadStatus
+  tags: unknown
   created_at: string
+}
+
+export interface EmpresaRow {
+  id: string
+  nome: string
+  slug: string
+  logo_url: string | null
+  cor_primaria: string
+  cor_secundaria: string
+  whatsapp: string | null
+  ativa: boolean
+}
+
+export interface UsuarioRow {
+  id: string
+  empresa_id: string
+  nome: string
+  email: string
+  role: UserRole
+  avatar_url: string | null
+  creci: string | null
 }
 
 export type PropertySort = 'price_asc' | 'price_desc' | 'recent'
@@ -59,28 +113,51 @@ export interface PropertyListFilters {
   priceMin?: number
   priceMax?: number
   bedrooms?: number
+  suites?: number
   bathrooms?: number
   parking_spaces?: number
 }
 
-export interface PropertyInsert {
-  title: string
-  description?: string | null
-  type: PropertyType
-  purpose: PropertyPurpose
-  price: number
-  city: string
-  neighborhood: string
-  address?: string | null
-  bedrooms: number
-  bathrooms: number
-  parking_spaces: number
+export interface ImovelInsert {
+  empresa_id: string
+  titulo: string
+  descricao?: string | null
+  tipo: PropertyType
+  finalidade: PropertyPurpose
+  preco: number
+  cidade: string
+  bairro: string
+  endereco?: string | null
+  quartos: number
+  suites: number
+  banheiros: number
+  vagas: number
   area?: number | null
-  status: PropertyStatus
-  featured: boolean
-  user_id: string
+  status: ImovelStatus
+  destaque: boolean
+  corretor_id?: string | null
 }
 
-export interface PropertyUpdate extends Partial<PropertyInsert> {
-  updated_at?: string
+export type ImovelUpdate = Partial<ImovelInsert> & { updated_at?: string }
+
+export interface VisitaRow {
+  id: string
+  empresa_id: string
+  imovel_id: string
+  lead_id: string | null
+  corretor_id: string | null
+  data_hora: string
+  status: 'agendada' | 'realizada' | 'cancelada'
+  observacoes: string | null
+}
+
+export interface BlogPostRow {
+  id: string
+  empresa_id: string
+  titulo: string
+  slug: string
+  conteudo: string
+  imagem_capa: string | null
+  publicado: boolean
+  created_at: string
 }

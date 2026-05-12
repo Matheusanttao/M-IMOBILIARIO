@@ -1,3 +1,5 @@
+'use client'
+
 import { Filter } from 'lucide-react'
 import type { PropertyListFilters, PropertyPurpose, PropertyType } from '@/types'
 import { PROPERTY_TYPES, PURPOSES } from '@/lib/constants'
@@ -104,6 +106,19 @@ export function PropertyFilters({
           onChange({
             ...value,
             bedrooms: e.target.value ? Number(e.target.value) : undefined,
+          })
+        }
+      />
+      <Select
+        label="Suítes (mín.)"
+        options={roomsOptions}
+        value={
+          value.suites && value.suites > 0 ? String(value.suites) : ''
+        }
+        onChange={(e) =>
+          onChange({
+            ...value,
+            suites: e.target.value ? Number(e.target.value) : undefined,
           })
         }
       />

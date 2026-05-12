@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
-import { fetchLeadsForUser } from '@/services/leads'
+import { fetchLeadsForTenant } from '@/services/leads'
 import type { LeadRow } from '@/types'
 
-type LeadWithProperty = LeadRow & {
-  properties?: { title: string; id: string } | null
+type LeadWithImovel = LeadRow & {
+  imoveis?: { titulo: string; id: string; slug: string | null } | null
 }
 
 export function useLeads() {
-  const [leads, setLeads] = useState<LeadWithProperty[]>([])
+  const [leads, setLeads] = useState<LeadWithImovel[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(() => {
     setLoading(true)
     setError(null)
-    fetchLeadsForUser()
+    fetchLeadsForTenant()
       .then(setLeads)
       .catch((e: Error) => setError(e.message ?? 'Erro ao carregar leads.'))
       .finally(() => setLoading(false))

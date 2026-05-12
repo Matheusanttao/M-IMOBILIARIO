@@ -1,10 +1,12 @@
-import { Link } from 'react-router-dom'
+'use client'
+
+import Link from 'next/link'
 import { X } from 'lucide-react'
 
 const links = [
-  { to: '/', label: 'Início' },
-  { to: '/imoveis', label: 'Imóveis' },
-  { to: '/admin/login', label: 'Área admin' },
+  { href: '/', label: 'Início' },
+  { href: '/imoveis', label: 'Imóveis' },
+  { href: '/admin/login', label: 'Área admin' },
 ]
 
 export function MobileMenu({
@@ -36,8 +38,8 @@ export function MobileMenu({
         <nav className="flex flex-col gap-4">
           {links.map((l) => (
             <Link
-              key={l.to}
-              to={l.to}
+              key={l.href}
+              href={l.href}
               onClick={onClose}
               className="rounded-lg px-3 py-2 text-lg font-medium text-primary hover:bg-surface"
             >

@@ -1,7 +1,7 @@
-import type { PropertyRow } from '@/types'
+import type { ImovelRow } from '@/types'
 import { PropertyCard } from '@/components/property/PropertyCard'
 
-export function PropertyGrid({ items }: { items: PropertyRow[] }) {
+export function PropertyGrid({ items }: { items: ImovelRow[] }) {
   if (!items.length) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 bg-white py-16 text-center text-slate-500">

@@ -21,11 +21,21 @@ export function formatDatePt(iso: string) {
 }
 
 export function getCoverImage(
-  images: { image_url: string; is_cover: boolean }[] | undefined,
+  images:
+    | {
+        url?: string
+        image_url?: string
+        is_capa?: boolean
+        is_cover?: boolean
+      }[]
+    | undefined,
 ): string | null {
   if (!images?.length) return null
-  const cover = images.find((i) => i.is_cover)
-  return cover?.image_url ?? images[0]?.image_url ?? null
+  const cover = images.find((i) => i.is_capa ?? i.is_cover)
+  const first = images[0]
+  return (
+    (cover?.url ?? cover?.image_url ?? first?.url ?? first?.image_url) ?? null
+  )
 }
 
 export function buildWhatsAppUrl(phoneDigits: string, text: string) {

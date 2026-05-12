@@ -1,17 +1,27 @@
+'use client'
+
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { fetchFeaturedProperties } from '@/services/properties'
-import type { PropertyRow } from '@/types'
+import Link from 'next/link'
+import { fetchFeaturedImoveis } from '@/services/imoveis'
+import type { ImovelRow } from '@/types'
 import { PropertyGrid } from '@/components/property/PropertyGrid'
 import { Spinner } from '@/components/ui/Spinner'
+import { useTenant } from '@/contexts/TenantContext'
+
 export function FeaturedProperties() {
-  const [items, setItems] = useState<PropertyRow[]>([])
+  const { empresaId } = useTenant()
+  const [items, setItems] = useState<ImovelRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!empresaId) {
+      setLoading(false)
+      setError('Imobiliária não configurada para este domínio.')
+      return
+    }
     let cancelled = false
-    fetchFeaturedProperties(6)
+    fetchFeaturedImoveis(empresaId, 6)
       .then((data) => {
         if (!cancelled) setItems(data)
       })
@@ -24,7 +34,7 @@ export function FeaturedProperties() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [empresaId])
 
   return (
     <section className="py-16 sm:py-24">
@@ -39,7 +49,7 @@ export function FeaturedProperties() {
             </p>
           </div>
           <Link
-            to="/imoveis"
+            href="/imoveis"
             className="inline-flex items-center justify-center rounded-xl border-2 border-primary/20 bg-white px-5 py-2.5 text-sm font-medium text-primary shadow-sm transition hover:border-accent hover:text-accent"
           >
             Ver todos

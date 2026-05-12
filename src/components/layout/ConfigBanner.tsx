@@ -1,5 +1,5 @@
 import { AlertTriangle } from 'lucide-react'
-import { isSupabaseConfigured, SUPABASE_SETUP_MESSAGE } from '@/services/supabase'
+import { isSupabaseConfigured, SUPABASE_SETUP_MESSAGE } from '@/lib/supabase/client'
 
 export function ConfigBanner() {
   if (isSupabaseConfigured()) return null

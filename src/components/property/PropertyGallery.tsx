@@ -1,15 +1,20 @@
+'use client'
+
 import { useMemo } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Pagination } from 'swiper/modules'
-import type { PropertyImageRow } from '@/types'
+import type { ImovelImagemRow } from '@/types'
 
 import 'swiper/css'
 import 'swiper/css/pagination'
 
-export function PropertyGallery({ images }: { images: PropertyImageRow[] }) {
+export function PropertyGallery({ images }: { images: ImovelImagemRow[] }) {
   const sorted = useMemo(() => {
     const list = [...images]
-    list.sort((a, b) => Number(b.is_cover) - Number(a.is_cover))
+    list.sort(
+      (a, b) =>
+        Number(b.is_capa) - Number(a.is_capa) || a.ordem - b.ordem,
+    )
     return list
   }, [images])
 
@@ -30,8 +35,9 @@ export function PropertyGallery({ images }: { images: PropertyImageRow[] }) {
       {sorted.map((img) => (
         <SwiperSlide key={img.id}>
           <div className="aspect-[16/10] bg-slate-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={img.image_url}
+              src={img.url}
               alt=""
               className="size-full object-cover"
             />

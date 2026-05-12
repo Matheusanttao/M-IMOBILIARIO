@@ -1,5 +1,7 @@
+'use client'
+
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
 import { PURPOSES, PROPERTY_TYPES } from '@/lib/constants'
 import type { PropertyPurpose, PropertyType } from '@/types'
@@ -14,7 +16,7 @@ const typeOptions = [
 ]
 
 export function HeroSection() {
-  const navigate = useNavigate()
+  const router = useRouter()
   const [city, setCity] = useState('')
   const [neighborhood, setNeighborhood] = useState('')
   const [purpose, setPurpose] = useState<PropertyPurpose | ''>('')
@@ -28,7 +30,7 @@ export function HeroSection() {
     if (purpose) params.set('purpose', purpose)
     if (type) params.set('type', type)
     const q = params.toString()
-    navigate(q ? `/imoveis?${q}` : '/imoveis')
+    router.push(q ? `/imoveis?${q}` : '/imoveis')
   }
 
   return (

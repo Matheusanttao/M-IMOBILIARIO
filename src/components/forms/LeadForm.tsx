@@ -1,3 +1,5 @@
+'use client'
+
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { leadSchema, type LeadFormValues } from '@/lib/validators'
@@ -7,7 +9,13 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { useState } from 'react'
 
-export function LeadForm({ propertyId }: { propertyId: string }) {
+export function LeadForm({
+  imovelId,
+  empresaId,
+}: {
+  imovelId: string
+  empresaId: string
+}) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
@@ -31,7 +39,8 @@ export function LeadForm({ propertyId }: { propertyId: string }) {
     setSuccess(false)
     try {
       await createLead({
-        property_id: propertyId,
+        imovel_id: imovelId,
+        empresa_id: empresaId,
         name: data.name,
         phone: data.phone,
         email: data.email || undefined,
@@ -48,8 +57,18 @@ export function LeadForm({ propertyId }: { propertyId: string }) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input label="Nome" {...register('name')} error={errors.name?.message} />
       <Input label="Telefone" {...register('phone')} error={errors.phone?.message} />
-      <Input label="E-mail (opcional)" type="email" {...register('email')} error={errors.email?.message} />
-      <Textarea label="Mensagem" rows={4} {...register('message')} error={errors.message?.message} />
+      <Input
+        label="E-mail (opcional)"
+        type="email"
+        {...register('email')}
+        error={errors.email?.message}
+      />
+      <Textarea
+        label="Mensagem"
+        rows={4}
+        {...register('message')}
+        error={errors.message?.message}
+      />
       {serverError ? (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>
       ) : null}

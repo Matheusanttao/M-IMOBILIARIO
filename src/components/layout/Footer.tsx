@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import Link from 'next/link'
 import { Building2, Mail, Phone } from 'lucide-react'
 
 export function Footer() {
@@ -21,17 +21,17 @@ export function Footer() {
             </h3>
             <ul className="mt-4 space-y-2 text-sm text-white/90">
               <li>
-                <Link to="/" className="hover:text-accent">
+                <Link href="/" className="hover:text-accent">
                   Início
                 </Link>
               </li>
               <li>
-                <Link to="/imoveis" className="hover:text-accent">
+                <Link href="/imoveis" className="hover:text-accent">
                   Imóveis
                 </Link>
               </li>
               <li>
-                <Link to="/admin/login" className="hover:text-accent">
+                <Link href="/admin/login" className="hover:text-accent">
                   Admin
                 </Link>
               </li>
