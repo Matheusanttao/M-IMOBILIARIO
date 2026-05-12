@@ -38,5 +38,13 @@ export const propertyFormSchema = z.object({
 })
 
 export type PropertyFormValues = z.infer<typeof propertyFormSchema>
+export const contatoSchema = z.object({
+  nome: z.string().min(2, 'Informe seu nome'),
+  email: z.string().email('E-mail inválido'),
+  telefone: z.string().min(8, 'Telefone inválido'),
+  mensagem: z.string().min(10, 'Escreva uma mensagem (mín. 10 caracteres)'),
+})
+
+export type ContatoFormValues = z.infer<typeof contatoSchema>
 export type LeadFormValues = z.infer<typeof leadSchema>
 export type LoginFormValues = z.infer<typeof loginSchema>

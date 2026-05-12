@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Building2, Home, LogOut, MessageSquare, Calendar, Users, BarChart3, Settings } from 'lucide-react'
+import { Building2, Home, LogOut, MessageSquare, Calendar, Users, BarChart3, FileText, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase/client'
@@ -14,6 +14,7 @@ const items = [
   { href: '/admin/agenda', label: 'Agenda', icon: Calendar },
   { href: '/admin/equipe', label: 'Equipe', icon: Users },
   { href: '/admin/relatorios', label: 'Relatórios', icon: BarChart3 },
+  { href: '/admin/blog', label: 'Blog', icon: FileText },
   { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
 ]
 

@@ -36,12 +36,15 @@ export function PropertyForm() {
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [serverError, setServerError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
     control,
     reset,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema) as Resolver<PropertyFormValues>,
@@ -102,6 +105,41 @@ export function PropertyForm() {
       cancelled = true
     }
   }, [isNew, paramId, reset])
+
+  async function generateWithAI() {
+    setAiLoading(true)
+    setServerError(null)
+    try {
+      const values = getValues()
+      const res = await fetch('/api/ai/descricao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: values.titulo,
+          tipo: values.tipo,
+          finalidade: values.finalidade,
+          cidade: values.cidade,
+          bairro: values.bairro,
+          quartos: values.quartos,
+          banheiros: values.banheiros,
+          vagas: values.vagas,
+          area: values.area,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setServerError(data.error ?? 'Erro ao gerar descrição com IA')
+        return
+      }
+      if (data.descricao) {
+        setValue('descricao', data.descricao, { shouldDirty: true })
+      }
+    } catch {
+      setServerError('Erro de conexão ao gerar descrição.')
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   function onPickFiles(e: ChangeEvent<HTMLInputElement>) {
     const list = e.target.files
@@ -214,12 +252,24 @@ export function PropertyForm() {
         className="space-y-6 rounded-2xl border border-slate-100 bg-white p-6 shadow-md sm:p-8"
       >
         <Input label="Título" {...register('titulo')} error={errors.titulo?.message} />
-        <Textarea
-          label="Descrição"
-          rows={5}
-          {...register('descricao')}
-          error={errors.descricao?.message}
-        />
+        <div>
+          <Textarea
+            label="Descrição"
+            rows={5}
+            {...register('descricao')}
+            error={errors.descricao?.message}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="mt-2"
+            loading={aiLoading}
+            onClick={generateWithAI}
+          >
+            {aiLoading ? 'Gerando…' : '✨ Gerar com IA'}
+          </Button>
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Select

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Corretores',
 }

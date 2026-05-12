@@ -5,27 +5,44 @@ import { updateSession } from '@/lib/supabase/middleware'
 type CookieRow = { name: string; value: string; options?: Record<string, unknown> }
 
 const DEFAULT_TENANT = process.env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG ?? 'demo'
+const BASE_DOMAIN = process.env.NEXT_PUBLIC_BASE_DOMAIN ?? ''
 
-function resolveTenantSlug(host: string): string {
-  const slug = host.split('.')[0]
+function resolveTenantSlug(request: NextRequest): string {
+  const host = request.headers.get('host') ?? ''
+  const forwardedHost = request.headers.get('x-forwarded-host')
+
+  const effectiveHost = forwardedHost ?? host
+
   const isLocalhost =
-    host.includes('localhost') ||
-    host.includes('127.0.0.1') ||
-    host.startsWith('localhost:')
-  if (
-    isLocalhost ||
-    !slug ||
-    slug === 'www' ||
-    host.includes('vercel.app')
-  ) {
+    effectiveHost.includes('localhost') ||
+    effectiveHost.includes('127.0.0.1') ||
+    effectiveHost.startsWith('localhost:')
+
+  if (isLocalhost) return DEFAULT_TENANT
+
+  if (effectiveHost.includes('vercel.app')) return DEFAULT_TENANT
+
+  if (BASE_DOMAIN && effectiveHost.endsWith(BASE_DOMAIN)) {
+    const subdomain = effectiveHost.replace(`.${BASE_DOMAIN}`, '').split('.')[0]
+    if (subdomain && subdomain !== 'www') {
+      return subdomain
+    }
     return DEFAULT_TENANT
   }
+
+  const slug = effectiveHost.split('.')[0]
+  if (!slug || slug === 'www') return DEFAULT_TENANT
+
+  if (forwardedHost && !forwardedHost.includes('vercel.app')) {
+    const customDomainSlug = effectiveHost.replace(/:\d+$/, '').replace(/\./g, '-')
+    return `custom:${customDomainSlug}`
+  }
+
   return slug
 }
 
 export async function middleware(request: NextRequest) {
-  const host = request.headers.get('host') ?? ''
-  const tenantSlug = resolveTenantSlug(host)
+  const tenantSlug = resolveTenantSlug(request)
 
   const response = await updateSession(request)
   response.headers.set('x-tenant-slug', tenantSlug)
