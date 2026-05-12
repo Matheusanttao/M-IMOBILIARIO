@@ -22,6 +22,12 @@ export const metadata: Metadata = {
   },
   description:
     'Encontre imóveis para venda e aluguel. Plataforma imobiliária moderna com CRM, leads e multiempresa.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'M. Imobiliário',
+  },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',

@@ -39,6 +39,38 @@ export function ImovelDetailView() {
     setPageUrl(typeof window !== 'undefined' ? window.location.href : '')
   }, [])
 
+  useEffect(() => {
+    if (!imovel) return
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateListing',
+      name: imovel.titulo,
+      description: (imovel.descricao ?? '').slice(0, 5000),
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
+      offers: {
+        '@type': 'Offer',
+        price: imovel.preco,
+        priceCurrency: 'BRL',
+        availability: 'https://schema.org/InStock',
+      },
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: imovel.cidade,
+        streetAddress: imovel.endereco ?? undefined,
+      },
+    }
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.id = 'imovel-jsonld'
+    script.text = JSON.stringify(schema)
+    const existing = document.getElementById('imovel-jsonld')
+    existing?.remove()
+    document.head.appendChild(script)
+    return () => {
+      document.getElementById('imovel-jsonld')?.remove()
+    }
+  }, [imovel])
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 bg-surface">

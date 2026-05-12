@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect, useState, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -35,8 +36,9 @@ type ConfigForm = z.infer<typeof configSchema>
 const FIELDS_SELECT =
   'id,nome,slug,email,telefone,whatsapp,endereco,cidade,estado,documento,cor_primaria,cor_secundaria,instagram,facebook,logo_url'
 
-export default function AdminConfigPage() {
+function AdminConfigPageInner() {
   const supabase = createClient()
+  const searchParams = useSearchParams()
   const [empresaId, setEmpresaId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<{
@@ -149,6 +151,12 @@ export default function AdminConfigPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
+      {searchParams?.get('inadimplente') ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Sua assinatura está <strong>inadimplente</strong>. Regularize o pagamento no Mercado Pago para liberar
+          o painel completo.
+        </div>
+      ) : null}
       <div>
         <h1 className="font-display text-3xl font-bold text-primary">
           Configurações
@@ -363,5 +371,19 @@ export default function AdminConfigPage() {
         </div>
       </form>
     </div>
+  )
+}
+
+export default function AdminConfigPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
+      <AdminConfigPageInner />
+    </Suspense>
   )
 }

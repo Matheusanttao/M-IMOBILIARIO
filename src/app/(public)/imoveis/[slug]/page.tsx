@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { ImovelDetailView } from '@/components/public/ImovelDetailView'
 
+export const revalidate = 120
+
 export const metadata: Metadata = {
   title: 'Detalhe do imóvel',
 }

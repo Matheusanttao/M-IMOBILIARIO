@@ -14,13 +14,22 @@ export type ImovelStatus =
   | 'alugado'
   | 'oculto'
 
-export type UserRole = 'master' | 'admin' | 'gerente' | 'corretor'
+export type UserRole =
+  | 'master'
+  | 'admin'
+  | 'gerente'
+  | 'corretor'
+  | 'financeiro'
+  | 'captador'
+  | 'atendente'
 
 export type LeadStatus =
   | 'novo'
-  | 'contatado'
-  | 'qualificado'
+  | 'contato'
+  | 'visita'
+  | 'proposta'
   | 'negociacao'
+  | 'contrato'
   | 'convertido'
   | 'perdido'
 
@@ -62,6 +71,7 @@ export interface ImovelRow {
   seo_titulo: string | null
   seo_descricao: string | null
   visualizacoes: number
+  localizacao_aproximada?: boolean
   created_at: string
   updated_at: string
   imovel_imagens?: ImovelImagemRow[]
@@ -79,6 +89,11 @@ export interface LeadRow {
   origem: string
   status: LeadStatus
   tags: unknown
+  score?: number
+  origem_utm?: string | null
+  assignado_para?: string | null
+  ultimo_contato?: string | null
+  proximo_followup?: string | null
   created_at: string
 }
 
@@ -101,6 +116,89 @@ export interface UsuarioRow {
   role: UserRole
   avatar_url: string | null
   creci: string | null
+}
+
+export interface BlogPostRow {
+  id: string
+  empresa_id: string
+  titulo: string
+  slug: string
+  conteudo: string
+  imagem_capa: string | null
+  publicado: boolean
+  seo_titulo: string | null
+  seo_descricao: string | null
+  created_at: string
+  updated_at?: string
+}
+
+export interface ProprietarioRow {
+  id: string
+  empresa_id: string
+  nome: string
+  email: string | null
+  telefone: string | null
+  documento: string | null
+  cpf_cnpj: string | null
+  rg_ie: string | null
+  whatsapp: string | null
+  chave_pix: string | null
+  tipo_chave_pix: string | null
+  banco: string | null
+  agencia: string | null
+  conta: string | null
+  tipo_conta: string | null
+  avatar_url: string | null
+  observacoes: string | null
+  ativo: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface ImovelProprietarioRow {
+  id: string
+  empresa_id: string
+  imovel_id: string
+  proprietario_id: string
+  percentual: number
+  principal: boolean
+  created_at: string
+}
+
+export interface FinanceiroLancamentoRow {
+  id: string
+  empresa_id: string
+  categoria_id: string | null
+  contrato_id: string | null
+  proprietario_id: string | null
+  descricao: string
+  tipo: 'receita' | 'despesa'
+  subtipo: string | null
+  valor: number
+  data_vencimento: string
+  data_pagamento: string | null
+  status: 'pendente' | 'pago' | 'atrasado' | 'cancelado'
+  comprovante_url: string | null
+  observacoes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface PropostaRow {
+  id: string
+  empresa_id: string
+  lead_id: string | null
+  imovel_id: string
+  usuario_id: string | null
+  tipo: 'compra' | 'locacao'
+  valor_proposto: number
+  condicoes: string | null
+  status: 'pendente' | 'aceita' | 'contraproposta' | 'rejeitada' | 'expirada'
+  validade: string | null
+  observacoes: string | null
+  pdf_url: string | null
+  created_at: string
+  updated_at: string
 }
 
 export type PropertySort = 'price_asc' | 'price_desc' | 'recent'
@@ -149,15 +247,4 @@ export interface VisitaRow {
   data_hora: string
   status: 'agendada' | 'realizada' | 'cancelada'
   observacoes: string | null
-}
-
-export interface BlogPostRow {
-  id: string
-  empresa_id: string
-  titulo: string
-  slug: string
-  conteudo: string
-  imagem_capa: string | null
-  publicado: boolean
-  created_at: string
 }

@@ -92,8 +92,8 @@ export default function AdminBlogPage() {
       conteudo: post.conteudo,
       imagem_capa: post.imagem_capa ?? '',
       publicado: post.publicado,
-      seo_titulo: '',
-      seo_descricao: '',
+      seo_titulo: post.seo_titulo ?? '',
+      seo_descricao: post.seo_descricao ?? '',
     })
     setSaveError(null)
     setEditorOpen(true)
@@ -119,6 +119,9 @@ export default function AdminBlogPage() {
       conteudo: draft.conteudo,
       imagem_capa: draft.imagem_capa.trim() || null,
       publicado: draft.publicado,
+      seo_titulo: draft.seo_titulo.trim() || null,
+      seo_descricao: draft.seo_descricao.trim() || null,
+      updated_at: new Date().toISOString(),
     }
 
     if (!payload.titulo) {

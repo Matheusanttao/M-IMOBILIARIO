@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useCallback, useMemo, useState } from 'react'
 import { useLeads } from '@/hooks/useLeads'
 import { updateLeadStatus } from '@/services/leads'
 import type { LeadStatus } from '@/types'
@@ -11,9 +11,11 @@ import { formatDatePt } from '@/lib/utils'
 
 const columns: { id: LeadStatus; title: string }[] = [
   { id: 'novo', title: 'Novo' },
-  { id: 'contatado', title: 'Contatado' },
-  { id: 'qualificado', title: 'Qualificado' },
+  { id: 'contato', title: 'Contato' },
+  { id: 'visita', title: 'Visita' },
+  { id: 'proposta', title: 'Proposta' },
   { id: 'negociacao', title: 'Negociação' },
+  { id: 'contrato', title: 'Contrato' },
   { id: 'convertido', title: 'Convertido' },
   { id: 'perdido', title: 'Perdido' },
 ]
@@ -59,11 +61,11 @@ export function LeadsKanban() {
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex min-w-[1100px] gap-4">
+      <div className="flex min-w-[1800px] gap-3">
         {columns.map((col) => (
           <div
             key={col.id}
-            className="w-64 shrink-0 rounded-2xl border border-slate-100 bg-white shadow-md"
+            className="w-52 shrink-0 rounded-2xl border border-slate-100 bg-white shadow-md"
           >
             <div className="border-b border-slate-100 px-3 py-2 font-semibold text-primary">
               {col.title}
@@ -74,7 +76,11 @@ export function LeadsKanban() {
                   key={l.id}
                   className="rounded-xl border border-slate-100 bg-surface/80 p-3 text-sm"
                 >
-                  <p className="font-medium text-slate-800">{l.name}</p>
+                  <p className="font-medium text-slate-800">
+                    <Link href={`/admin/leads/${l.id}`} className="hover:text-primary hover:underline">
+                      {l.name}
+                    </Link>
+                  </p>
                   <p className="text-xs text-muted">{formatDatePt(l.created_at)}</p>
                   {l.imoveis?.titulo ? (
                     <p className="mt-1 text-xs text-primary">

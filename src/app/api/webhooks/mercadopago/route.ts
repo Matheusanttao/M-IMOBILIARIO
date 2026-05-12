@@ -31,23 +31,48 @@ async function fetchMPPayment(paymentId: string) {
   return res.json()
 }
 
+function mapMpPaymentStatusToDb(
+  status: string | undefined,
+): 'pendente' | 'aprovado' | 'recusado' | 'estornado' {
+  const s = (status ?? '').toLowerCase()
+  if (s === 'approved') return 'aprovado'
+  if (s === 'refunded' || s === 'charged_back') return 'estornado'
+  if (s === 'rejected' || s === 'cancelled') return 'recusado'
+  return 'pendente'
+}
+
 async function handlePayment(dataId: string) {
   const payment = await fetchMPPayment(dataId)
   const db = supabaseAdmin()
 
-  await db.from('pagamentos').upsert(
-    {
-      mp_payment_id: String(payment.id),
-      status: payment.status,
-      valor: payment.transaction_amount,
-      metodo: payment.payment_method_id,
-      empresa_id: payment.metadata?.empresa_id ?? null,
-      assinatura_id: payment.metadata?.assinatura_id ?? null,
-      dados_mp: payment,
-      atualizado_em: new Date().toISOString(),
-    },
-    { onConflict: 'mp_payment_id' },
-  )
+  const empresaId = payment.metadata?.empresa_id as string | undefined
+  const assinaturaId = payment.metadata?.assinatura_id as string | undefined
+  if (!empresaId) {
+    console.warn('[mercadopago] payment missing empresa_id in metadata', payment.id)
+    return
+  }
+
+  const row = {
+    mercadopago_payment_id: String(payment.id),
+    status: mapMpPaymentStatusToDb(payment.status),
+    valor: Number(payment.transaction_amount ?? 0),
+    metodo: payment.payment_method_id != null ? String(payment.payment_method_id) : null,
+    empresa_id: empresaId,
+    assinatura_id: assinaturaId ?? null,
+    detalhes: payment as unknown as Record<string, unknown>,
+    data_pagamento:
+      payment.status === 'approved' && payment.date_approved
+        ? String(payment.date_approved)
+        : null,
+  }
+
+  const { error } = await db.from('pagamentos').upsert(row, {
+    onConflict: 'mercadopago_payment_id',
+  })
+  if (error) {
+    console.error('[mercadopago] pagamentos upsert error:', error)
+    throw error
+  }
 
   console.info('[mercadopago] payment upserted:', payment.id, payment.status)
 }
@@ -62,14 +87,43 @@ async function handleSubscription(dataId: string) {
   const sub = await res.json()
   const db = supabaseAdmin()
 
-  await db
+  const mpStatus = (sub.status as string | undefined)?.toLowerCase()
+  let statusAssinatura: 'ativa' | 'cancelada' | 'inadimplente' | 'trial' = 'trial'
+  if (mpStatus === 'authorized') statusAssinatura = 'ativa'
+  else if (mpStatus === 'cancelled') statusAssinatura = 'cancelada'
+  else if (mpStatus === 'paused') statusAssinatura = 'inadimplente'
+
+  const payload = {
+    status: statusAssinatura,
+    mercadopago_subscription_id: String(sub.id),
+    updated_at: new Date().toISOString(),
+  }
+
+  const { data: updatedRows, error: err1 } = await db
     .from('assinaturas')
-    .update({
-      status_mp: sub.status,
-      dados_mp: sub,
-      atualizado_em: new Date().toISOString(),
-    })
-    .eq('mp_preapproval_id', String(sub.id))
+    .update(payload)
+    .eq('mercadopago_subscription_id', String(sub.id))
+    .select('id')
+
+  if (err1) {
+    console.error('[mercadopago] assinaturas update error:', err1)
+    throw err1
+  }
+
+  if (!updatedRows?.length && typeof sub.external_reference === 'string') {
+    try {
+      const ref = JSON.parse(sub.external_reference) as { empresa_id?: string }
+      if (ref.empresa_id) {
+        const { error: err2 } = await db
+          .from('assinaturas')
+          .update(payload)
+          .eq('empresa_id', ref.empresa_id)
+        if (err2) console.error('[mercadopago] assinaturas update by empresa error:', err2)
+      }
+    } catch {
+      /* ignore */
+    }
+  }
 
   console.info('[mercadopago] subscription updated:', sub.id, sub.status)
 }

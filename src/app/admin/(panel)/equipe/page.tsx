@@ -44,6 +44,9 @@ const ROLE_OPTIONS = [
   { value: 'admin', label: 'Admin' },
   { value: 'gerente', label: 'Gerente' },
   { value: 'corretor', label: 'Corretor' },
+  { value: 'financeiro', label: 'Financeiro' },
+  { value: 'captador', label: 'Captador' },
+  { value: 'atendente', label: 'Atendente' },
 ]
 
 const ROLE_BADGE: Record<UserRole, 'default' | 'accent' | 'success' | 'muted'> = {
@@ -51,6 +54,9 @@ const ROLE_BADGE: Record<UserRole, 'default' | 'accent' | 'success' | 'muted'> =
   admin: 'default',
   gerente: 'accent',
   corretor: 'success',
+  financeiro: 'accent',
+  captador: 'success',
+  atendente: 'muted',
 }
 
 const EMPTY_FORM: MemberFormData = {

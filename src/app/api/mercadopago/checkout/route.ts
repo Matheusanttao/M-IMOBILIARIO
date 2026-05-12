@@ -39,12 +39,14 @@ export async function POST(request: Request) {
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
+    const precoMensal = Number(plano.preco_mensal ?? 0)
+
     const subscriptionBody = {
       reason: `M-Imobiliário — ${plano.nome}`,
       auto_recurring: {
         frequency: 1,
         frequency_type: 'months',
-        transaction_amount: plano.preco,
+        transaction_amount: precoMensal,
         currency_id: 'BRL',
       },
       back_url: `${siteUrl}/planos/sucesso`,
@@ -72,6 +74,33 @@ export async function POST(request: Request) {
     }
 
     const mpData = await mpRes.json()
+    const mpId = String(mpData.id)
+
+    const { data: assinaturasExistentes } = await db
+      .from('assinaturas')
+      .select('id')
+      .eq('empresa_id', empresa_id)
+      .limit(1)
+
+    const now = new Date().toISOString()
+    if (assinaturasExistentes?.[0]?.id) {
+      await db
+        .from('assinaturas')
+        .update({
+          plano_id,
+          mercadopago_subscription_id: mpId,
+          status: 'trial',
+          updated_at: now,
+        })
+        .eq('id', assinaturasExistentes[0].id)
+    } else {
+      await db.from('assinaturas').insert({
+        empresa_id,
+        plano_id,
+        status: 'trial',
+        mercadopago_subscription_id: mpId,
+      })
+    }
 
     return NextResponse.json({
       init_point: mpData.init_point,
