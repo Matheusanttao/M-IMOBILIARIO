@@ -32,7 +32,7 @@ const nav: {
   end?: boolean
 }[] = [
   { href: '/admin', label: 'Dashboard', icon: Home, modulo: 'dashboard', end: true },
-  { href: '/admin/imoveis/novo', label: 'Imóveis', icon: Building2, modulo: 'imoveis' },
+  { href: '/admin/imoveis', label: 'Imóveis', icon: Building2, modulo: 'imoveis' },
   { href: '/admin/proprietarios', label: 'Clientes', icon: UserCircle, modulo: 'proprietarios' },
   { href: '/admin/leads', label: 'Leads', icon: MessageSquare, modulo: 'crm' },
   { href: '/admin/agenda', label: 'Agendamentos', icon: Calendar, modulo: 'agenda' },

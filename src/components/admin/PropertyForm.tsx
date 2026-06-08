@@ -31,18 +31,6 @@ interface CaptadorOption {
   nome: string
 }
 
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') resolve(reader.result)
-      else reject(new Error('Não foi possível ler a imagem.'))
-    }
-    reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'))
-    reader.readAsDataURL(file)
-  })
-}
-
 export function PropertyForm() {
   const params = useParams<{ id: string }>()
   const paramId = params?.id
@@ -148,8 +136,12 @@ export function PropertyForm() {
   function onPickFiles(e: ChangeEvent<HTMLInputElement>) {
     const list = e.target.files
     if (!list?.length) return
+    const files = Array.from(list)
     setServerError(null)
-    setNewFiles((prev) => [...prev, ...Array.from(list)])
+    setNewFiles((prev) => [...prev, ...files])
+    setUploadProgress(
+      `${files.length} imagem(ns) selecionada(s). Clique em Salvar para concluir.`,
+    )
     e.target.value = ''
   }
 
@@ -222,21 +214,22 @@ export function PropertyForm() {
 
       if (!imovelId) throw new Error('ID do imóvel inválido.')
 
-      const uploaded =
-        newFiles.length && cloudinaryConfigured()
-          ? await uploadManyToCloudinary(newFiles, (done, total) => {
-              setUploadProgress(`Enviando fotos ${done}/${total}…`)
-            })
-          : []
-      const embedded =
-        newFiles.length && !cloudinaryConfigured()
-          ? await Promise.all(
-              newFiles.map(async (file) => ({
-                secure_url: await fileToDataUrl(file),
-                public_id: `inline:${file.name}`,
-              })),
-            )
-          : []
+      let uploaded: { secure_url: string; public_id: string }[] = []
+
+      if (newFiles.length && cloudinaryConfigured()) {
+        try {
+          uploaded = await uploadManyToCloudinary(newFiles, (done, total) => {
+            setUploadProgress(`Enviando fotos ${done}/${total}…`)
+          })
+        } catch (e) {
+          setUploadProgress(null)
+          throw new Error(
+            e instanceof Error
+              ? e.message
+              : 'Cloudinary recusou o upload. Verifique se o preset está como unsigned.',
+          )
+        }
+      }
       setUploadProgress(null)
 
       const rows = [
@@ -258,19 +251,13 @@ export function PropertyForm() {
           is_capa: false,
           ordem: 0,
         })),
-        ...embedded.map((u) => ({
-          url: u.secure_url,
-          public_id: u.public_id,
-          is_capa: false,
-          ordem: 0,
-        })),
       ].map((r, index) => ({ ...r, is_capa: index === 0, ordem: index }))
 
       await replaceImovelImagens(imovelId, rows)
 
       setNewFiles([])
       setManualImageUrls([])
-      router.push('/admin')
+      router.push('/admin/imoveis')
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'Erro ao salvar.')
     }
@@ -291,7 +278,7 @@ export function PropertyForm() {
           {isNew ? 'Novo imóvel' : 'Editar imóvel'}
         </h1>
         <Link
-          href="/admin"
+          href="/admin/imoveis"
           className="text-sm font-medium text-primary underline hover:text-accent"
         >
           Voltar
@@ -434,7 +421,7 @@ export function PropertyForm() {
           </label>
           {!cloudinaryConfigured() ? (
             <p className="mt-2 text-xs text-amber-700">
-              Cloudinary não configurado. As imagens escolhidas serão salvas diretamente no banco.
+              Cloudinary não configurado. Configure o cloud name e um upload preset unsigned para enviar fotos.
             </p>
           ) : null}
           {uploadProgress ? (
@@ -520,7 +507,7 @@ export function PropertyForm() {
           <Button type="submit" loading={isSubmitting}>
             Salvar
           </Button>
-          <Button type="button" variant="secondary" onClick={() => router.push('/admin')}>
+          <Button type="button" variant="secondary" onClick={() => router.push('/admin/imoveis')}>
             Cancelar
           </Button>
         </div>

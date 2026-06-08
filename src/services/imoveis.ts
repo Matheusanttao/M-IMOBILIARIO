@@ -108,7 +108,18 @@ export async function fetchFeaturedImoveis(
     .limit(limit)
 
   if (error) throw error
-  return (data as ImovelRow[]) ?? []
+  if (data?.length) return data as ImovelRow[]
+
+  const { data: recent, error: recentError } = await supabase
+    .from('imoveis')
+    .select(IMOVEL_SELECT)
+    .eq('empresa_id', empresaId)
+    .eq('status', 'disponivel')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (recentError) throw recentError
+  return (recent as ImovelRow[]) ?? []
 }
 
 export async function fetchImovelBySlug(
