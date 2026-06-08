@@ -123,7 +123,7 @@ export function HeroSection() {
                 </span>
                 <Input
                   aria-label="Cidade, bairro ou região"
-                  placeholder="Ex.: São Paulo, Alphaville..."
+                  placeholder="Digite cidade, bairro ou região"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="mt-0 border-0 bg-transparent p-0 text-sm text-white shadow-none placeholder:text-white/45 focus:border-transparent focus:ring-0"

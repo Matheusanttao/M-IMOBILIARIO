@@ -70,8 +70,7 @@ export function FeaturedProperties() {
             <PropertyGrid items={items} />
           ) : (
             <p className="rounded-xl border border-white/10 bg-white/[0.03] p-6 text-center text-sm text-white/60">
-              Nenhum imóvel em destaque no momento. Cadastre imóveis no painel
-              administrativo para exibi-los aqui.
+              Nenhum imóvel em destaque no momento.
             </p>
           )}
         </div>

@@ -11,7 +11,7 @@ export default function PoliticaPrivacidadePage() {
   const title = politicaPrivacidadeTitulo?.trim() || 'Política de Privacidade'
   const text =
     politicaPrivacidadeTexto?.trim() ||
-    'Esta política descreve como tratamos informações fornecidas pelos visitantes e clientes. Os dados enviados pelos formulários do site são utilizados para atendimento, retorno comercial e melhoria dos serviços prestados pela imobiliária.'
+    'Conteúdo em atualização.'
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">

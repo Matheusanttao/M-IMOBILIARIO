@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         {
           role: 'system',
           content:
-            'Você é assistente imobiliário do M. Imobiliário: respostas curtas, profissionais, em português do Brasil.',
+            'Você é um assistente imobiliário: respostas curtas, profissionais, em português do Brasil.',
         },
         ...messages.slice(-12),
       ],

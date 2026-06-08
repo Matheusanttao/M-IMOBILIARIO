@@ -15,23 +15,25 @@ const playfair = Playfair_Display({
   display: 'swap',
 })
 
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME?.trim() || 'Imobiliária'
+
 export const metadata: Metadata = {
   title: {
-    default: 'M. Imobiliário — Plataforma SaaS',
-    template: '%s | M. Imobiliário',
+    default: siteName,
+    template: `%s | ${siteName}`,
   },
   description:
-    'Encontre imóveis para venda e aluguel. Plataforma imobiliária moderna com CRM, leads e multiempresa.',
+    'Encontre imóveis para venda e aluguel com atendimento especializado.',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'M. Imobiliário',
+    title: siteName,
   },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    siteName: 'M. Imobiliário',
+    siteName,
   },
 }
 

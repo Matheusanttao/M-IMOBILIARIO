@@ -232,8 +232,7 @@ export function ImovelDetailView() {
                   </a>
                 ) : (
                   <p className="text-sm text-white/60">
-                    Configure o WhatsApp da imobiliária ou{' '}
-                    <code className="rounded bg-white/10 px-1">NEXT_PUBLIC_WHATSAPP_NUMBER</code>.
+                    WhatsApp indisponível no momento. Envie sua mensagem pelo formulário de interesse.
                   </p>
                 )}
               </CardContent>

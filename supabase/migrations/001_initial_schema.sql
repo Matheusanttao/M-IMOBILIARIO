@@ -1044,37 +1044,6 @@ create policy financeiro_lancamentos_all on public.financeiro_lancamentos
 for all using (public.is_master() or empresa_id = public.user_empresa_id())
 with check (public.is_master() or empresa_id = public.user_empresa_id());
 
--- ------------------------------------------------------------
--- Dados iniciais para desenvolvimento
--- ------------------------------------------------------------
-insert into public.empresas (nome, slug, email, ativa)
-values ('Imobiliaria Demo', 'demo', 'contato@demo.local', true)
-on conflict (slug) do nothing;
-
-insert into public.planos (nome, slug, preco_mensal, limite_imoveis, limite_corretores, limite_leads, ativo)
-values ('Enterprise', 'enterprise', 0, null, null, null, true)
-on conflict (slug) do nothing;
-
-insert into public.assinaturas (empresa_id, plano_id, status)
-select e.id, p.id, 'ativa'
-from public.empresas e
-cross join public.planos p
-where e.slug = 'demo'
-  and p.slug = 'enterprise'
-  and not exists (select 1 from public.assinaturas a where a.empresa_id = e.id);
-
-insert into public.usuarios (id, empresa_id, nome, email, role)
-select
-  au.id,
-  e.id,
-  coalesce(au.raw_user_meta_data->>'full_name', split_part(au.email, '@', 1)),
-  au.email,
-  'admin'
-from auth.users au
-cross join public.empresas e
-where e.slug = 'demo'
-on conflict (id) do nothing;
-
 -- Realtime para notificacoes. Ignora se a publication nao existir ou se ja tiver sido adicionada.
 do $$
 begin

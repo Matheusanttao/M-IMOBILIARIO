@@ -12,7 +12,7 @@ export default function SobrePage() {
   const title = quemSomosTitulo?.trim() || 'Sobre nós'
   const text =
     quemSomosTexto?.trim() ||
-    'Somos uma imobiliária focada em experiência digital, transparência e atendimento consultivo. Nossa equipe acompanha cada etapa da jornada para conectar pessoas aos imóveis certos com segurança e clareza.'
+    'Conteúdo em atualização.'
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">

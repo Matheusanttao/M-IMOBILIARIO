@@ -117,11 +117,11 @@ export function ImoveisListing() {
               Imóveis
             </h1>
             <p className="mt-2 text-white/60">
-              Cadastre a imobiliária e seus imóveis para publicar o catálogo.
+              Nosso catálogo estará disponível em breve.
             </p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center text-white/60">
-            Nenhum catálogo conectado no momento.
+            Nenhum imóvel disponível no momento.
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   Area,
   AreaChart,
@@ -22,121 +23,85 @@ import {
   UserPlus,
   Users,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { formatCurrencyBRL } from '@/lib/utils'
+import type { ImovelStatus, LeadStatus, PropertyType } from '@/types'
 
-const kpis = [
-  {
-    label: 'Imóveis cadastrados',
-    value: '248',
-    delta: '12% este mês',
-    icon: Building2,
-    tone: 'gold' as const,
-  },
-  {
-    label: 'Leads ativos',
-    value: '156',
-    delta: '18% este mês',
-    icon: Users,
-    tone: 'dark' as const,
-  },
-  {
-    label: 'Negociações',
-    value: '32',
-    delta: '8% este mês',
-    icon: Handshake,
-    tone: 'gold' as const,
-  },
-  {
-    label: 'Vendas (mês)',
-    value: 'R$ 1.248.000',
-    delta: '25% este mês',
-    icon: DollarSign,
-    tone: 'dark' as const,
-  },
-]
+type Tone = 'gold' | 'dark'
 
-const salesData = [
-  { dia: '01/05', valor: 280000 },
-  { dia: '05/05', valor: 360000 },
-  { dia: '10/05', valor: 540000 },
-  { dia: '15/05', valor: 680000 },
-  { dia: '20/05', valor: 760000 },
-  { dia: '25/05', valor: 980000 },
-  { dia: '31/05', valor: 1248000 },
-]
+type ImovelDashboard = {
+  id: string
+  titulo: string
+  tipo: PropertyType
+  cidade: string
+  bairro: string
+  status: ImovelStatus
+  visualizacoes: number
+  created_at: string
+  imovel_imagens?: { url: string; is_capa: boolean; ordem: number }[]
+}
 
-const typeData = [
-  { name: 'Apartamentos', value: 104, pct: 42, color: '#d4a853' },
-  { name: 'Casas', value: 69, pct: 28, color: '#1f2d3d' },
-  { name: 'Terrenos', value: 37, pct: 15, color: '#64748b' },
-  { name: 'Comerciais', value: 25, pct: 10, color: '#94a3b8' },
-  { name: 'Outros', value: 13, pct: 5, color: '#cbd5e1' },
-]
+type LeadDashboard = {
+  id: string
+  name: string
+  status: LeadStatus
+  created_at: string
+  imoveis?: { titulo: string } | null
+}
 
-const activities = [
-  {
-    icon: Building2,
-    title: 'Novo imóvel cadastrado',
-    text: 'Apartamento no Itaim Bibi',
-    time: 'Há 2h',
-  },
-  {
-    icon: UserPlus,
-    title: 'Novo lead recebido',
-    text: 'Mariana Silva - Interesse em cobertura',
-    time: 'Há 3h',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Negociação atualizada',
-    text: 'Venda - Apartamento Jardins',
-    time: 'Há 1 dia',
-  },
-  {
-    icon: FileSignature,
-    title: 'Contrato assinado',
-    text: 'Locação - Sala Comercial Vila Olímpia',
-    time: 'Há 2 dias',
-  },
-]
+type ContratoDashboard = {
+  id: string
+  tipo: 'venda' | 'aluguel'
+  valor: number
+  status: string
+  created_at: string
+  imoveis?: { titulo: string } | null
+}
 
-const mostViewed = [
-  {
-    titulo: 'Cobertura Duplex',
-    local: 'Itaim Bibi, São Paulo - SP',
-    tipo: 'Apartamento',
-    views: '1.245',
-    img: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=200&q=80',
-  },
-  {
-    titulo: 'Casa em Alphaville',
-    local: 'Alphaville, Santana de Parnaíba - SP',
-    tipo: 'Casa',
-    views: '987',
-    img: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=200&q=80',
-  },
-  {
-    titulo: 'Sala Comercial',
-    local: 'Vila Olímpia, São Paulo - SP',
-    tipo: 'Comercial',
-    views: '756',
-    img: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=200&q=80',
-  },
-  {
-    titulo: 'Terreno Residencial',
-    local: 'Tamboré, Santana de Parnaíba - SP',
-    tipo: 'Terreno',
-    views: '643',
-    img: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=200&q=80',
-  },
-]
+type DashboardData = {
+  imoveis: ImovelDashboard[]
+  leads: LeadDashboard[]
+  contratos: ContratoDashboard[]
+}
 
-const funnel = [
-  { stage: 'Leads', value: 156, pct: 100, width: 100, color: '#1f2d3d' },
-  { stage: 'Qualificados', value: 89, pct: 57, width: 80, color: '#3b4a5e' },
-  { stage: 'Negociação', value: 23, pct: 15, width: 46, color: '#b8923f' },
-  { stage: 'Fechados', value: 12, pct: 8, width: 32, color: '#d4a853' },
-]
+const TYPE_LABELS: Record<PropertyType, string> = {
+  apartamento: 'Apartamentos',
+  casa: 'Casas',
+  terreno: 'Terrenos',
+  sala_comercial: 'Comerciais',
+}
+
+const TYPE_COLORS: Record<PropertyType, string> = {
+  apartamento: '#d4a853',
+  casa: '#1f2d3d',
+  terreno: '#64748b',
+  sala_comercial: '#94a3b8',
+}
+
+const FUNNEL_COLORS = ['#1f2d3d', '#3b4a5e', '#b8923f', '#d4a853']
+
+function startOfCurrentMonth() {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), 1)
+}
+
+function isThisMonth(date: string) {
+  return new Date(date) >= startOfCurrentMonth()
+}
+
+function formatCount(value: number) {
+  return new Intl.NumberFormat('pt-BR').format(value)
+}
+
+function formatRelativeTime(date: string) {
+  const diff = Date.now() - new Date(date).getTime()
+  const minutes = Math.max(1, Math.floor(diff / 60000))
+  if (minutes < 60) return `Há ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `Há ${hours}h`
+  const days = Math.floor(hours / 24)
+  return `Há ${days} dia${days > 1 ? 's' : ''}`
+}
 
 function Panel({
   title,
@@ -145,8 +110,8 @@ function Panel({
   className = '',
 }: {
   title: string
-  action?: React.ReactNode
-  children: React.ReactNode
+  action?: ReactNode
+  children: ReactNode
   className?: string
 }) {
   return (
@@ -163,6 +128,196 @@ function Panel({
 }
 
 export default function AdminDashboardPage() {
+  const supabase = useMemo(() => createClient(), [])
+  const [data, setData] = useState<DashboardData>({
+    imoveis: [],
+    leads: [],
+    contratos: [],
+  })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadDashboard() {
+      setLoading(true)
+      setError(null)
+
+      const [imoveisRes, leadsRes, contratosRes] = await Promise.all([
+        supabase
+          .from('imoveis')
+          .select('id,titulo,tipo,cidade,bairro,status,visualizacoes,created_at,imovel_imagens(url,is_capa,ordem)')
+          .order('visualizacoes', { ascending: false })
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('leads')
+          .select('id,name,status,created_at,imoveis(titulo)')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('contratos')
+          .select('id,tipo,valor,status,created_at,imoveis(titulo)')
+          .order('created_at', { ascending: false }),
+      ])
+
+      const firstError = imoveisRes.error || leadsRes.error || contratosRes.error
+      if (firstError) throw firstError
+
+      if (!cancelled) {
+        setData({
+          imoveis: (imoveisRes.data as ImovelDashboard[]) ?? [],
+          leads: (leadsRes.data as LeadDashboard[]) ?? [],
+          contratos: (contratosRes.data as ContratoDashboard[]) ?? [],
+        })
+      }
+    }
+
+    loadDashboard()
+      .catch((e: Error) => {
+        if (!cancelled) setError(e.message)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [supabase])
+
+  const vendasMes = data.contratos
+    .filter((c) => c.tipo === 'venda' && c.status !== 'cancelado' && isThisMonth(c.created_at))
+    .reduce((sum, c) => sum + Number(c.valor || 0), 0)
+
+  const leadsAtivos = data.leads.filter((l) => !['convertido', 'perdido'].includes(l.status)).length
+  const negociacoes = data.leads.filter((l) =>
+    ['visita', 'proposta', 'negociacao', 'contrato'].includes(l.status),
+  ).length
+
+  const kpis = [
+    {
+      label: 'Imóveis cadastrados',
+      value: formatCount(data.imoveis.length),
+      delta: `${formatCount(data.imoveis.filter((i) => isThisMonth(i.created_at)).length)} este mês`,
+      icon: Building2,
+      tone: 'gold' as Tone,
+    },
+    {
+      label: 'Leads ativos',
+      value: formatCount(leadsAtivos),
+      delta: `${formatCount(data.leads.filter((l) => isThisMonth(l.created_at)).length)} este mês`,
+      icon: Users,
+      tone: 'dark' as Tone,
+    },
+    {
+      label: 'Negociações',
+      value: formatCount(negociacoes),
+      delta: 'Leads em andamento',
+      icon: Handshake,
+      tone: 'gold' as Tone,
+    },
+    {
+      label: 'Vendas (mês)',
+      value: formatCurrencyBRL(vendasMes),
+      delta: 'Contratos de venda',
+      icon: DollarSign,
+      tone: 'dark' as Tone,
+    },
+  ]
+
+  const salesData = Array.from({ length: 6 }, (_, index) => {
+    const d = new Date()
+    d.setMonth(d.getMonth() - (5 - index))
+    const month = d.getMonth()
+    const year = d.getFullYear()
+    const valor = data.contratos
+      .filter((c) => {
+        const created = new Date(c.created_at)
+        return (
+          c.tipo === 'venda' &&
+          c.status !== 'cancelado' &&
+          created.getMonth() === month &&
+          created.getFullYear() === year
+        )
+      })
+      .reduce((sum, c) => sum + Number(c.valor || 0), 0)
+
+    return {
+      mes: d.toLocaleDateString('pt-BR', { month: 'short' }),
+      valor,
+    }
+  })
+
+  const typeData = (Object.keys(TYPE_LABELS) as PropertyType[])
+    .map((type) => {
+      const value = data.imoveis.filter((i) => i.tipo === type).length
+      const pct = data.imoveis.length ? Math.round((value / data.imoveis.length) * 100) : 0
+      return {
+        name: TYPE_LABELS[type],
+        value,
+        pct,
+        color: TYPE_COLORS[type],
+      }
+    })
+    .filter((item) => item.value > 0)
+
+  const activities = [
+    ...data.imoveis.slice(0, 3).map((imovel) => ({
+      icon: Building2,
+      title: 'Imóvel cadastrado',
+      text: imovel.titulo,
+      time: formatRelativeTime(imovel.created_at),
+      date: imovel.created_at,
+    })),
+    ...data.leads.slice(0, 3).map((lead) => ({
+      icon: UserPlus,
+      title: 'Lead recebido',
+      text: lead.imoveis?.titulo ? `${lead.name} - ${lead.imoveis.titulo}` : lead.name,
+      time: formatRelativeTime(lead.created_at),
+      date: lead.created_at,
+    })),
+    ...data.contratos.slice(0, 3).map((contrato) => ({
+      icon: FileSignature,
+      title: 'Contrato criado',
+      text: contrato.imoveis?.titulo ?? formatCurrencyBRL(Number(contrato.valor || 0)),
+      time: formatRelativeTime(contrato.created_at),
+      date: contrato.created_at,
+    })),
+  ]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 4)
+
+  const mostViewed = data.imoveis
+    .filter((i) => i.visualizacoes > 0)
+    .slice(0, 4)
+
+  const funnelBase = data.leads.length
+  const funnel = [
+    { stage: 'Leads', value: data.leads.length },
+    {
+      stage: 'Qualificados',
+      value: data.leads.filter((l) => !['novo', 'perdido'].includes(l.status)).length,
+    },
+    { stage: 'Negociação', value: negociacoes },
+    { stage: 'Fechados', value: data.leads.filter((l) => l.status === 'convertido').length },
+  ].map((item, index) => {
+    const pct = funnelBase ? Math.round((item.value / funnelBase) * 100) : 0
+    return {
+      ...item,
+      pct,
+      width: Math.max(pct, item.value ? 24 : 14),
+      color: FUNNEL_COLORS[index],
+    }
+  })
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+        Não foi possível carregar o dashboard: {error}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -184,11 +339,11 @@ export default function AdminDashboardPage() {
               <div className="min-w-0">
                 <p className="text-sm text-muted">{k.label}</p>
                 <p className="mt-1 font-display text-2xl font-bold text-primary">
-                  {k.value}
+                  {loading ? '...' : k.value}
                 </p>
                 <p className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-600">
                   <ArrowUpRight className="size-3.5" />
-                  {k.delta}
+                  {loading ? 'Carregando' : k.delta}
                 </p>
               </div>
             </div>
@@ -200,16 +355,13 @@ export default function AdminDashboardPage() {
         <Panel
           title="Desempenho de vendas"
           className="xl:col-span-1"
-          action={<span className="text-xs text-muted">Este mês</span>}
+          action={<span className="text-xs text-muted">Últimos 6 meses</span>}
         >
           <p className="font-display text-3xl font-bold text-primary">
-            {formatCurrencyBRL(1248000)}
+            {loading ? '...' : formatCurrencyBRL(vendasMes)}
           </p>
           <p className="mt-1 flex items-center gap-2 text-xs text-muted">
-            Total de vendas
-            <span className="flex items-center gap-1 font-medium text-emerald-600">
-              <ArrowUpRight className="size-3.5" /> 25% vs mês anterior
-            </span>
+            Total de vendas no mês atual
           </p>
           <div className="mt-4 h-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -221,7 +373,7 @@ export default function AdminDashboardPage() {
                   </linearGradient>
                 </defs>
                 <XAxis
-                  dataKey="dia"
+                  dataKey="mes"
                   tick={{ fontSize: 11, fill: '#94a3b8' }}
                   axisLine={false}
                   tickLine={false}
@@ -230,7 +382,7 @@ export default function AdminDashboardPage() {
                   tick={{ fontSize: 11, fill: '#94a3b8' }}
                   axisLine={false}
                   tickLine={false}
-                  tickFormatter={(v) => `${v / 1000}k`}
+                  tickFormatter={(v) => `${Number(v) / 1000}k`}
                 />
                 <Tooltip
                   formatter={(v: number) => formatCurrencyBRL(v)}
@@ -250,71 +402,81 @@ export default function AdminDashboardPage() {
         </Panel>
 
         <Panel title="Imóveis por tipo">
-          <div className="flex flex-col items-center gap-4 sm:flex-row">
-            <div className="relative h-44 w-44 shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={typeData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={52}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    stroke="none"
-                  >
-                    {typeData.map((d) => (
-                      <Cell key={d.name} fill={d.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-display text-2xl font-bold text-primary">248</span>
-                <span className="text-xs text-muted">Total</span>
-              </div>
-            </div>
-            <ul className="flex-1 space-y-2 text-sm">
-              {typeData.map((d) => (
-                <li key={d.name} className="flex items-center gap-2">
-                  <span
-                    className="size-2.5 rounded-full"
-                    style={{ backgroundColor: d.color }}
-                  />
-                  <span className="flex-1 text-slate-700">{d.name}</span>
-                  <span className="text-muted">
-                    {d.pct}% ({d.value})
+          {typeData.length ? (
+            <div className="flex flex-col items-center gap-4 sm:flex-row">
+              <div className="relative h-44 w-44 shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={typeData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={52}
+                      outerRadius={80}
+                      paddingAngle={2}
+                      stroke="none"
+                    >
+                      {typeData.map((d) => (
+                        <Cell key={d.name} fill={d.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="font-display text-2xl font-bold text-primary">
+                    {data.imoveis.length}
                   </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+                  <span className="text-xs text-muted">Total</span>
+                </div>
+              </div>
+              <ul className="flex-1 space-y-2 text-sm">
+                {typeData.map((d) => (
+                  <li key={d.name} className="flex items-center gap-2">
+                    <span
+                      className="size-2.5 rounded-full"
+                      style={{ backgroundColor: d.color }}
+                    />
+                    <span className="flex-1 text-slate-700">{d.name}</span>
+                    <span className="text-muted">
+                      {d.pct}% ({d.value})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-sm text-muted">Nenhum imóvel cadastrado ainda.</p>
+          )}
         </Panel>
 
         <Panel
           title="Atividades recentes"
           action={
-            <button type="button" className="text-xs font-medium text-accent">
+            <Link href="/admin/notificacoes" className="text-xs font-medium text-accent">
               Ver todas
-            </button>
+            </Link>
           }
         >
-          <ul className="space-y-4">
-            {activities.map((a) => (
-              <li key={a.title} className="flex items-start gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
-                  <a.icon className="size-4.5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-slate-800">{a.title}</p>
-                  <p className="truncate text-xs text-muted">{a.text}</p>
-                </div>
-                <span className="whitespace-nowrap text-xs text-slate-400">
-                  {a.time}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {activities.length ? (
+            <ul className="space-y-4">
+              {activities.map((a) => (
+                <li key={`${a.title}-${a.date}`} className="flex items-start gap-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                    <a.icon className="size-4.5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-800">{a.title}</p>
+                    <p className="truncate text-xs text-muted">{a.text}</p>
+                  </div>
+                  <span className="whitespace-nowrap text-xs text-slate-400">
+                    {a.time}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">Nenhuma atividade recente.</p>
+          )}
         </Panel>
       </div>
 
@@ -322,55 +484,75 @@ export default function AdminDashboardPage() {
         <Panel
           title="Imóveis mais visualizados"
           action={
-            <Link href="/admin" className="text-xs font-medium text-accent">
-              Ver todos
+            <Link href="/admin/imoveis/novo" className="text-xs font-medium text-accent">
+              Cadastrar imóvel
             </Link>
           }
         >
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-slate-400">
-                <tr>
-                  <th className="pb-3 font-medium">Imóvel</th>
-                  <th className="pb-3 font-medium">Tipo</th>
-                  <th className="pb-3 font-medium">Visualizações</th>
-                  <th className="pb-3 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {mostViewed.map((m) => (
-                  <tr key={m.titulo}>
-                    <td className="py-3">
-                      <div className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={m.img}
-                          alt=""
-                          className="size-11 rounded-lg object-cover"
-                        />
-                        <div className="min-w-0">
-                          <p className="font-medium text-slate-800">{m.titulo}</p>
-                          <p className="truncate text-xs text-muted">{m.local}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 text-slate-600">{m.tipo}</td>
-                    <td className="py-3 text-slate-600">{m.views}</td>
-                    <td className="py-3">
-                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                        Disponível
-                      </span>
-                    </td>
+          {mostViewed.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[480px] text-left text-sm">
+                <thead className="text-xs uppercase tracking-wide text-slate-400">
+                  <tr>
+                    <th className="pb-3 font-medium">Imóvel</th>
+                    <th className="pb-3 font-medium">Tipo</th>
+                    <th className="pb-3 font-medium">Visualizações</th>
+                    <th className="pb-3 font-medium">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {mostViewed.map((m) => {
+                    const cover =
+                      m.imovel_imagens
+                        ?.slice()
+                        .sort((a, b) => Number(b.is_capa) - Number(a.is_capa) || a.ordem - b.ordem)[0]
+                        ?.url ?? null
+
+                    return (
+                      <tr key={m.id}>
+                        <td className="py-3">
+                          <div className="flex items-center gap-3">
+                            {cover ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={cover}
+                                alt=""
+                                className="size-11 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <span className="flex size-11 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                                <Building2 className="size-5" />
+                              </span>
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-medium text-slate-800">{m.titulo}</p>
+                              <p className="truncate text-xs text-muted">
+                                {m.bairro}, {m.cidade}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 text-slate-600">{TYPE_LABELS[m.tipo]}</td>
+                        <td className="py-3 text-slate-600">{formatCount(m.visualizacoes)}</td>
+                        <td className="py-3">
+                          <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+                            {m.status}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-muted">Nenhum imóvel com visualizações registradas.</p>
+          )}
         </Panel>
 
         <Panel
           title="Funil de vendas"
-          action={<span className="text-xs text-muted">Este mês</span>}
+          action={<span className="text-xs text-muted">Baseado nos leads</span>}
         >
           <div className="grid items-center gap-6 sm:grid-cols-[1.3fr_1fr]">
             <div className="flex flex-col items-center gap-1.5 py-2">

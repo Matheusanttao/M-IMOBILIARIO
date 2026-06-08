@@ -56,7 +56,8 @@ export async function getPublicEmpresa(): Promise<PublicEmpresa | null> {
 
   const supabase = await createServerSupabaseClient()
   const cookieStore = await cookies()
-  const tenantSlug = cookieStore.get('tenant_slug')?.value?.trim()
+  const configuredSlug = process.env.NEXT_PUBLIC_TENANT_SLUG?.trim()
+  const tenantSlug = cookieStore.get('tenant_slug')?.value?.trim() || configuredSlug
 
   if (tenantSlug) {
     const { data } = await supabase
@@ -67,6 +68,7 @@ export async function getPublicEmpresa(): Promise<PublicEmpresa | null> {
       .maybeSingle()
 
     if (data) return data as PublicEmpresa
+    if (configuredSlug) return null
   }
 
   const { data } = await supabase
