@@ -14,6 +14,7 @@ import {
 } from '@/services/imoveis'
 import { uploadManyToCloudinary, cloudinaryConfigured } from '@/services/cloudinary'
 import { propertyFormSchema, type PropertyFormValues } from '@/lib/validators'
+import { createClient } from '@/lib/supabase/client'
 import type { ImovelImagemRow } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
