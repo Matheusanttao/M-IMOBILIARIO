@@ -67,7 +67,7 @@ export default function AdminLeadDetailPage() {
   }
 
   async function criarTarefa() {
-    if (!lead || !novaTarefa.trim()) return
+    if (!lead || !userId || !novaTarefa.trim()) return
     await addLeadTarefa({
       empresa_id: lead.empresa_id,
       lead_id: lead.id,
@@ -169,19 +169,20 @@ export default function AdminLeadDetailPage() {
         <ul className="mt-4 space-y-2">
           {tarefas.map((row) => {
             const r = row as Record<string, unknown>
+            const concluida = Boolean(r.concluida)
             return (
               <li key={String(r.id)} className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={Boolean(r.concluida)}
+                  checked={concluida}
                   onChange={() => {
                     void (async () => {
-                      await toggleLeadTarefa(String(r.id), !Boolean(r.concluida))
+                      await toggleLeadTarefa(String(r.id), !concluida)
                       void reload()
                     })()
                   }}
                 />
-                <span className={r.concluida ? 'line-through text-muted' : ''}>{String(r.titulo)}</span>
+                <span className={concluida ? 'line-through text-muted' : ''}>{String(r.titulo)}</span>
               </li>
             )
           })}

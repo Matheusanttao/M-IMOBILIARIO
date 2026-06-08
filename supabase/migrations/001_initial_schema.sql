@@ -860,12 +860,18 @@ for all using (
 drop policy if exists leads_insert_anon on public.leads;
 create policy leads_insert_anon on public.leads
 for insert with check (
-  exists (
-    select 1 from public.imoveis i
-    where i.id = imovel_id
-    and i.empresa_id = empresa_id
-    and i.status = 'disponivel'
-    and exists (select 1 from public.empresas e where e.id = i.empresa_id and e.ativa)
+  (
+    imovel_id is null
+    and exists (select 1 from public.empresas e where e.id = empresa_id and e.ativa)
+  )
+  or (
+    exists (
+      select 1 from public.imoveis i
+      where i.id = imovel_id
+      and i.empresa_id = empresa_id
+      and i.status = 'disponivel'
+      and exists (select 1 from public.empresas e where e.id = i.empresa_id and e.ativa)
+    )
   )
 );
 
@@ -1051,3 +1057,153 @@ begin
 exception
   when duplicate_object or undefined_object then null;
 end $$;
+
+-- ============================================================
+-- Consolidado: remocao de seeds/demo
+-- ============================================================
+delete from public.empresas
+where slug = 'demo'
+  and nome = 'Imobiliaria Demo'
+  and email = 'contato@demo.local';
+
+delete from public.planos
+where slug = 'enterprise'
+  and nome = 'Enterprise'
+  and preco_mensal = 0
+  and limite_imoveis is null
+  and limite_corretores is null
+  and limite_leads is null
+  and not exists (
+    select 1
+    from public.assinaturas a
+    where a.plano_id = public.planos.id
+  );
+
+-- ============================================================
+-- Consolidado: leads de contato sem imovel
+-- ============================================================
+drop policy if exists leads_insert_anon on public.leads;
+
+create policy leads_insert_anon on public.leads
+for insert with check (
+  (
+    imovel_id is null
+    and exists (select 1 from public.empresas e where e.id = empresa_id and e.ativa)
+  )
+  or (
+    exists (
+      select 1 from public.imoveis i
+      where i.id = imovel_id
+      and i.empresa_id = empresa_id
+      and i.status = 'disponivel'
+      and exists (select 1 from public.empresas e where e.id = i.empresa_id and e.ativa)
+    )
+  )
+);
+
+-- ============================================================
+-- Consolidado: endurecimento de policies sensiveis
+-- ============================================================
+create or replace function public.prevent_usuario_self_privilege_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() = old.id and not public.is_master() then
+    if new.role is distinct from old.role
+      or new.empresa_id is distinct from old.empresa_id
+      or new.ativo is distinct from old.ativo then
+      raise exception 'Nao e permitido alterar permissao, empresa ou status do proprio usuario.';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists prevent_usuario_self_privilege_update on public.usuarios;
+create trigger prevent_usuario_self_privilege_update
+before update on public.usuarios
+for each row execute function public.prevent_usuario_self_privilege_update();
+
+drop policy if exists logs_insert on public.logs;
+create policy logs_insert on public.logs
+for insert to authenticated
+with check (public.is_master() or empresa_id = public.user_empresa_id());
+
+drop policy if exists leads_insert_anon on public.leads;
+create policy leads_insert_anon on public.leads
+for insert to anon with check (
+  (
+    imovel_id is null
+    and exists (select 1 from public.empresas e where e.id = empresa_id and e.ativa)
+  )
+  or (
+    exists (
+      select 1 from public.imoveis i
+      where i.id = imovel_id
+      and i.empresa_id = empresa_id
+      and i.status = 'disponivel'
+      and exists (select 1 from public.empresas e where e.id = i.empresa_id and e.ativa)
+    )
+  )
+);
+
+drop policy if exists leads_insert_staff on public.leads;
+create policy leads_insert_staff on public.leads
+for insert to authenticated
+with check (public.is_master() or empresa_id = public.user_empresa_id());
+
+drop policy if exists lead_comentarios_all on public.lead_comentarios;
+drop policy if exists lead_comentarios_select on public.lead_comentarios;
+drop policy if exists lead_comentarios_insert on public.lead_comentarios;
+drop policy if exists lead_comentarios_update on public.lead_comentarios;
+drop policy if exists lead_comentarios_delete on public.lead_comentarios;
+create policy lead_comentarios_select on public.lead_comentarios
+for select using (public.is_master() or empresa_id = public.user_empresa_id());
+create policy lead_comentarios_insert on public.lead_comentarios
+for insert with check (
+  public.is_master()
+  or (empresa_id = public.user_empresa_id() and usuario_id = auth.uid())
+);
+create policy lead_comentarios_update on public.lead_comentarios
+for update using (
+  public.is_master()
+  or (empresa_id = public.user_empresa_id() and usuario_id = auth.uid())
+) with check (
+  public.is_master()
+  or (empresa_id = public.user_empresa_id() and usuario_id = auth.uid())
+);
+create policy lead_comentarios_delete on public.lead_comentarios
+for delete using (
+  public.is_master()
+  or (empresa_id = public.user_empresa_id() and usuario_id = auth.uid())
+);
+
+drop policy if exists lead_tarefas_all on public.lead_tarefas;
+drop policy if exists lead_tarefas_select on public.lead_tarefas;
+drop policy if exists lead_tarefas_insert on public.lead_tarefas;
+drop policy if exists lead_tarefas_update on public.lead_tarefas;
+drop policy if exists lead_tarefas_delete on public.lead_tarefas;
+create policy lead_tarefas_select on public.lead_tarefas
+for select using (public.is_master() or empresa_id = public.user_empresa_id());
+create policy lead_tarefas_insert on public.lead_tarefas
+for insert with check (
+  public.is_master()
+  or (empresa_id = public.user_empresa_id() and usuario_id = auth.uid())
+);
+create policy lead_tarefas_update on public.lead_tarefas
+for update using (
+  public.is_master()
+  or (empresa_id = public.user_empresa_id() and usuario_id = auth.uid())
+) with check (
+  public.is_master()
+  or (empresa_id = public.user_empresa_id() and usuario_id = auth.uid())
+);
+create policy lead_tarefas_delete on public.lead_tarefas
+for delete using (
+  public.is_master()
+  or (empresa_id = public.user_empresa_id() and usuario_id = auth.uid())
+);

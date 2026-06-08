@@ -12,7 +12,8 @@ describe('cn (classnames merge)', () => {
   })
 
   it('handles falsy values', () => {
-    expect(cn('base', false && 'hidden', undefined, null, 'end')).toBe('base end')
+    const hidden = false
+    expect(cn('base', hidden && 'hidden', undefined, null, 'end')).toBe('base end')
   })
 })
 

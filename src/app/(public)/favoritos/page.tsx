@@ -9,14 +9,27 @@ import { useTenant } from '@/contexts/TenantContext'
 
 const STORAGE_KEY = 'mimob_fav_ids'
 
+function readStoredIds(): string[] {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed)
+      ? parsed.filter((id): id is string => typeof id === 'string')
+      : []
+  } catch {
+    localStorage.removeItem(STORAGE_KEY)
+    return []
+  }
+}
+
 export default function FavoritosPage() {
   const { empresaId } = useTenant()
   const [items, setItems] = useState<ImovelRow[]>([])
 
   useEffect(() => {
     if (!empresaId || typeof window === 'undefined') return
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const ids: string[] = raw ? JSON.parse(raw) : []
+    const ids = readStoredIds()
     if (!ids.length) return
     const supabase = createClient()
     supabase

@@ -19,7 +19,6 @@ import {
   DollarSign,
   FileSignature,
   Handshake,
-  TrendingUp,
   UserPlus,
   Users,
 } from 'lucide-react'
@@ -28,6 +27,7 @@ import { formatCurrencyBRL } from '@/lib/utils'
 import type { ImovelStatus, LeadStatus, PropertyType } from '@/types'
 
 type Tone = 'gold' | 'dark'
+type RelatedTitle = { titulo: string } | { titulo: string }[] | null | undefined
 
 type ImovelDashboard = {
   id: string
@@ -46,7 +46,7 @@ type LeadDashboard = {
   name: string
   status: LeadStatus
   created_at: string
-  imoveis?: { titulo: string } | null
+  imoveis?: RelatedTitle
 }
 
 type ContratoDashboard = {
@@ -55,7 +55,7 @@ type ContratoDashboard = {
   valor: number
   status: string
   created_at: string
-  imoveis?: { titulo: string } | null
+  imoveis?: RelatedTitle
 }
 
 type DashboardData = {
@@ -101,6 +101,11 @@ function formatRelativeTime(date: string) {
   if (hours < 24) return `Há ${hours}h`
   const days = Math.floor(hours / 24)
   return `Há ${days} dia${days > 1 ? 's' : ''}`
+}
+
+function getRelatedTitle(relation: RelatedTitle) {
+  if (Array.isArray(relation)) return relation[0]?.titulo ?? null
+  return relation?.titulo ?? null
 }
 
 function Panel({
@@ -166,8 +171,8 @@ export default function AdminDashboardPage() {
       if (!cancelled) {
         setData({
           imoveis: (imoveisRes.data as ImovelDashboard[]) ?? [],
-          leads: (leadsRes.data as LeadDashboard[]) ?? [],
-          contratos: (contratosRes.data as ContratoDashboard[]) ?? [],
+          leads: (leadsRes.data as unknown as LeadDashboard[]) ?? [],
+          contratos: (contratosRes.data as unknown as ContratoDashboard[]) ?? [],
         })
       }
     }
@@ -272,14 +277,16 @@ export default function AdminDashboardPage() {
     ...data.leads.slice(0, 3).map((lead) => ({
       icon: UserPlus,
       title: 'Lead recebido',
-      text: lead.imoveis?.titulo ? `${lead.name} - ${lead.imoveis.titulo}` : lead.name,
+      text: getRelatedTitle(lead.imoveis)
+        ? `${lead.name} - ${getRelatedTitle(lead.imoveis)}`
+        : lead.name,
       time: formatRelativeTime(lead.created_at),
       date: lead.created_at,
     })),
     ...data.contratos.slice(0, 3).map((contrato) => ({
       icon: FileSignature,
       title: 'Contrato criado',
-      text: contrato.imoveis?.titulo ?? formatCurrencyBRL(Number(contrato.valor || 0)),
+      text: getRelatedTitle(contrato.imoveis) ?? formatCurrencyBRL(Number(contrato.valor || 0)),
       time: formatRelativeTime(contrato.created_at),
       date: contrato.created_at,
     })),
@@ -513,7 +520,6 @@ export default function AdminDashboardPage() {
                         <td className="py-3">
                           <div className="flex items-center gap-3">
                             {cover ? (
-                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={cover}
                                 alt=""

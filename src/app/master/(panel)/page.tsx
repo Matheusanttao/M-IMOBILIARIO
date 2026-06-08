@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrencyBRL, formatDatePt } from '@/lib/utils'
 import { Spinner } from '@/components/ui/Spinner'
@@ -35,7 +35,7 @@ interface EmpresaInadimplente {
 }
 
 export default function MasterDashboardPage() {
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const [loading, setLoading] = useState(true)
   const [totalEmpresas, setTotalEmpresas] = useState(0)

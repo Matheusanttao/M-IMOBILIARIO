@@ -40,6 +40,8 @@ export function PropertyForm() {
   const [loadingProperty, setLoadingProperty] = useState(!isNew)
   const [existingImages, setExistingImages] = useState<ImovelImagemRow[]>([])
   const [newFiles, setNewFiles] = useState<File[]>([])
+  const [manualImageUrls, setManualImageUrls] = useState<string[]>([])
+  const [imageUrlInput, setImageUrlInput] = useState('')
   const [serverError, setServerError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const [captadores, setCaptadores] = useState<CaptadorOption[]>([])
@@ -134,12 +136,40 @@ export function PropertyForm() {
   function onPickFiles(e: ChangeEvent<HTMLInputElement>) {
     const list = e.target.files
     if (!list?.length) return
+    if (!cloudinaryConfigured()) {
+      setServerError('Upload direto desabilitado. Insira a imagem por URL.')
+      e.target.value = ''
+      return
+    }
     setNewFiles((prev) => [...prev, ...Array.from(list)])
     e.target.value = ''
   }
 
   function removeNewFile(i: number) {
     setNewFiles((prev) => prev.filter((_, idx) => idx !== i))
+  }
+
+  function addImageUrl() {
+    const url = imageUrlInput.trim()
+    if (!url) return
+
+    try {
+      const parsed = new URL(url)
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        throw new Error()
+      }
+    } catch {
+      setServerError('Informe uma URL de imagem válida.')
+      return
+    }
+
+    setServerError(null)
+    setManualImageUrls((prev) => [...prev, url])
+    setImageUrlInput('')
+  }
+
+  function removeManualUrl(i: number) {
+    setManualImageUrls((prev) => prev.filter((_, idx) => idx !== i))
   }
 
   function removeExisting(img: ImovelImagemRow) {
@@ -199,6 +229,12 @@ export function PropertyForm() {
           is_capa: false,
           ordem: 0,
         })),
+        ...manualImageUrls.map((url) => ({
+          url,
+          public_id: `manual:${url}`,
+          is_capa: false,
+          ordem: 0,
+        })),
         ...uploaded.map((u) => ({
           url: u.secure_url,
           public_id: u.public_id,
@@ -210,6 +246,7 @@ export function PropertyForm() {
       await replaceImovelImagens(imovelId, rows)
 
       setNewFiles([])
+      setManualImageUrls([])
       router.push('/admin')
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'Erro ao salvar.')
@@ -374,12 +411,30 @@ export function PropertyForm() {
           </label>
           {!cloudinaryConfigured() ? (
             <p className="mt-2 text-xs text-amber-700">
-              Cloudinary não configurado — uploads desabilitados até definir as variáveis de ambiente.
+              Upload direto desabilitado até configurar Cloudinary. Você ainda pode inserir imagens por URL abaixo.
             </p>
           ) : null}
           {uploadProgress ? (
             <p className="mt-2 text-sm text-muted">{uploadProgress}</p>
           ) : null}
+
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <Input
+              label="URL da imagem"
+              type="url"
+              placeholder="https://..."
+              value={imageUrlInput}
+              onChange={(e) => setImageUrlInput(e.target.value)}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="self-end"
+              onClick={addImageUrl}
+            >
+              Inserir URL
+            </Button>
+          </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {existingImages.map((img) => (
@@ -392,6 +447,21 @@ export function PropertyForm() {
                   type="button"
                   className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100"
                   onClick={() => removeExisting(img)}
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ))}
+            {manualImageUrls.map((url, i) => (
+              <div
+                key={`${url}-${i}`}
+                className="group relative aspect-video overflow-hidden rounded-lg bg-slate-100"
+              >
+                <img src={url} alt="" className="size-full object-cover" />
+                <button
+                  type="button"
+                  className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100"
+                  onClick={() => removeManualUrl(i)}
                 >
                   <X className="size-4" />
                 </button>

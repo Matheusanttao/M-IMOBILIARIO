@@ -35,7 +35,6 @@ export function PropertyGallery({ images }: { images: ImovelImagemRow[] }) {
       {sorted.map((img) => (
         <SwiperSlide key={img.id}>
           <div className="aspect-[16/10] bg-card">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={img.url}
               alt=""

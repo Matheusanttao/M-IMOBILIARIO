@@ -6,7 +6,6 @@ type CookieRow = { name: string; value: string; options?: Record<string, unknown
 
 export async function middleware(request: NextRequest) {
   const response = await updateSession(request)
-  response.cookies.delete('tenant_slug')
 
   const { pathname } = request.nextUrl
 

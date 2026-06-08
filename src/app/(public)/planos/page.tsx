@@ -4,7 +4,7 @@ import { PlanCard } from './PlanCard'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Planos | M-Imobiliário',
+  title: 'Planos',
   description: 'Escolha o plano ideal para sua imobiliária',
 }
 

@@ -28,7 +28,6 @@ export function PropertyCard({
     >
       <div className="relative aspect-[16/10] overflow-hidden">
         {img ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={img}
             alt=""

@@ -103,7 +103,6 @@ export function AdminSidebar() {
 
       <div className="space-y-4 px-4 pb-4">
         <div className="flex items-center gap-3 border-t border-white/10 pt-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <div className="flex size-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-sm font-semibold text-white">
             AD
           </div>

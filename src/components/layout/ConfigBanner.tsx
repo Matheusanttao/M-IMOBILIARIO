@@ -1,5 +1,5 @@
 import { AlertTriangle } from 'lucide-react'
-import { isSupabaseConfigured, SUPABASE_SETUP_MESSAGE } from '@/lib/supabase/client'
+import { isSupabaseConfigured } from '@/lib/supabase/client'
 
 export function ConfigBanner() {
   if (isSupabaseConfigured()) return null
@@ -12,7 +12,7 @@ export function ConfigBanner() {
       <p className="mx-auto flex max-w-4xl items-start justify-center gap-2 text-left sm:items-center sm:text-center">
         <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-600 sm:mt-0" />
         <span>
-          <strong>Supabase não configurado.</strong> {SUPABASE_SETUP_MESSAGE}
+          <strong>Serviço temporariamente indisponível.</strong> Tente novamente em alguns instantes.
         </span>
       </p>
     </div>

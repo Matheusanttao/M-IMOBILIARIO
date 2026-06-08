@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   Plus,
   Pencil,
@@ -72,7 +72,7 @@ const EMPTY_FORM: MemberFormData = {
 /* ------------------------------------------------------------------ */
 
 export default function AdminEquipePage() {
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   const [members, setMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<{
@@ -106,8 +106,7 @@ export default function AdminEquipePage() {
       setMembers((data as TeamMember[]) ?? [])
     }
     setLoading(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [supabase])
 
   useEffect(() => {
     fetchMembers()
@@ -177,29 +176,19 @@ export default function AdminEquipePage() {
       }
       flash('success', 'Membro atualizado!')
     } else {
-      const { data: empresa } = await supabase
-        .from('empresas')
-        .select('id')
-        .maybeSingle()
-
-      if (!empresa) {
-        flash('error', 'Empresa não encontrada.')
-        setSaving(false)
-        return
-      }
-
-      const { error } = await supabase.from('usuarios').insert({
-        ...payload,
-        empresa_id: empresa.id,
-        ativo: true,
+      const res = await fetch('/api/admin/team/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       })
 
-      if (error) {
-        flash('error', error.message)
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        flash('error', body?.error ?? 'Não foi possível adicionar o membro.')
         setSaving(false)
         return
       }
-      flash('success', 'Membro adicionado!')
+      flash('success', 'Convite enviado e membro adicionado!')
     }
 
     setSaving(false)

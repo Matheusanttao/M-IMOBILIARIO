@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, type FormEvent } from 'react'
+import { useEffect, useState, useCallback, useMemo, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrencyBRL } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
@@ -33,7 +33,7 @@ const EMPTY_FORM = {
 }
 
 export default function MasterPlanosPage() {
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const [loading, setLoading] = useState(true)
   const [planos, setPlanos] = useState<Plano[]>([])

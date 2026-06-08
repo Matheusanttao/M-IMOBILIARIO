@@ -31,6 +31,10 @@ export function ContatoForm() {
     setServerError(null)
     setSuccess(false)
     try {
+      if (!empresaId) {
+        throw new Error('Contato indisponível no momento. Tente novamente mais tarde.')
+      }
+
       const supabase = createClient()
       const { error } = await supabase.from('leads').insert({
         empresa_id: empresaId,
