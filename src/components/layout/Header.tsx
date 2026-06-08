@@ -21,7 +21,7 @@ export function Header() {
   const pathname = usePathname()
   const path = pathname ?? ''
   const [open, setOpen] = useState(false)
-  const { empresaNome, whatsapp, financiamentoUrl } = useTenant()
+  const { empresaNome, logoUrl, whatsapp, financiamentoUrl } = useTenant()
   const initials = empresaNome
     .split(/\s+/)
     .filter(Boolean)
@@ -35,11 +35,21 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-white/10 bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-28 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3 text-white">
-            <span className="flex size-10 items-center justify-center rounded-full border border-accent/45 font-display text-xl font-bold leading-none text-accent">
-              {initials.slice(0, 2)}
-            </span>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={`Logo ${displayName}`}
+                width={100}
+                height={100}
+                className="size-[100px] rounded-2xl object-contain"
+              />
+            ) : (
+              <span className="flex size-[100px] items-center justify-center rounded-2xl border border-accent/45 font-display text-3xl font-bold leading-none text-accent">
+                {initials.slice(0, 2)}
+              </span>
+            )}
             <span className="leading-none">
               <span className="block font-display text-2xl font-semibold uppercase tracking-[0.22em] text-white">
                 {displayName}

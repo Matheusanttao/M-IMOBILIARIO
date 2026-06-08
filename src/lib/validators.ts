@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import type { PropertyPurpose, PropertyType } from '@/types'
 
 export const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -35,6 +34,7 @@ export const propertyFormSchema = z.object({
     'oculto',
   ] as const),
   destaque: z.boolean(),
+  captador_id: z.string().optional(),
 })
 
 export type PropertyFormValues = z.infer<typeof propertyFormSchema>

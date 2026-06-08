@@ -20,7 +20,7 @@ export function MobileMenu({
   open: boolean
   onClose: () => void
 }) {
-  const { empresaNome, whatsapp, financiamentoUrl } = useTenant()
+  const { empresaNome, logoUrl, whatsapp, financiamentoUrl } = useTenant()
   const initials = empresaNome
     .split(/\s+/)
     .filter(Boolean)
@@ -42,9 +42,19 @@ export function MobileMenu({
       <div className="absolute right-0 top-0 flex h-full w-[min(100%,22rem)] flex-col border-l border-white/10 bg-background p-6 shadow-2xl">
         <div className="mb-8 flex items-center justify-between">
           <Link href="/" onClick={onClose} className="flex items-center gap-3 text-white">
-            <span className="flex size-10 items-center justify-center rounded-full border border-accent/45 font-display text-xl font-bold leading-none text-accent">
-              {initials.slice(0, 2)}
-            </span>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={`Logo ${empresaNome}`}
+                width={100}
+                height={100}
+                className="size-[100px] rounded-2xl object-contain"
+              />
+            ) : (
+              <span className="flex size-[100px] items-center justify-center rounded-2xl border border-accent/45 font-display text-3xl font-bold leading-none text-accent">
+                {initials.slice(0, 2)}
+              </span>
+            )}
             <span className="leading-none">
               <span className="block font-display text-xl font-semibold uppercase tracking-[0.2em]">
                 {empresaNome}

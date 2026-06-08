@@ -9,6 +9,7 @@ import { Save, CheckCircle2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
 
 const configSchema = z.object({
@@ -29,13 +30,17 @@ const configSchema = z.object({
   instagram: z.string().nullable(),
   facebook: z.string().nullable(),
   financiamento_url: z.string().url('URL inválida').or(z.literal('')).nullable(),
+  quem_somos_titulo: z.string().nullable(),
+  quem_somos_texto: z.string().nullable(),
+  politica_privacidade_titulo: z.string().nullable(),
+  politica_privacidade_texto: z.string().nullable(),
   logo_url: z.string().url('URL inválida').or(z.literal('')).nullable(),
 })
 
 type ConfigForm = z.infer<typeof configSchema>
 
 const FIELDS_SELECT =
-  'id,nome,slug,email,telefone,whatsapp,endereco,cidade,estado,documento,cor_primaria,cor_secundaria,instagram,facebook,financiamento_url,logo_url'
+  'id,nome,slug,email,telefone,whatsapp,endereco,cidade,estado,documento,cor_primaria,cor_secundaria,instagram,facebook,financiamento_url,quem_somos_titulo,quem_somos_texto,politica_privacidade_titulo,politica_privacidade_texto,logo_url'
 
 function AdminConfigPageInner() {
   const supabase = createClient()
@@ -70,6 +75,10 @@ function AdminConfigPageInner() {
       instagram: '',
       facebook: '',
       financiamento_url: '',
+      quem_somos_titulo: '',
+      quem_somos_texto: '',
+      politica_privacidade_titulo: '',
+      politica_privacidade_texto: '',
       logo_url: '',
     },
   })
@@ -109,6 +118,10 @@ function AdminConfigPageInner() {
       instagram: data.instagram ?? '',
       facebook: data.facebook ?? '',
       financiamento_url: data.financiamento_url ?? '',
+      quem_somos_titulo: data.quem_somos_titulo ?? '',
+      quem_somos_texto: data.quem_somos_texto ?? '',
+      politica_privacidade_titulo: data.politica_privacidade_titulo ?? '',
+      politica_privacidade_texto: data.politica_privacidade_texto ?? '',
       logo_url: data.logo_url ?? '',
     })
     setLoading(false)
@@ -285,12 +298,15 @@ function AdminConfigPageInner() {
             </div>
             <div className="sm:col-span-2">
               <Input
-                label="URL do Logo"
+                label="URL do Logo (100x100 px)"
                 type="url"
                 placeholder="https://..."
                 {...register('logo_url')}
                 error={errors.logo_url?.message}
               />
+              <p className="mt-2 text-sm text-muted">
+                Use uma imagem quadrada. Ela aparece ao lado do nome da imobiliária no site.
+              </p>
             </div>
 
             {/* Preview */}
@@ -320,6 +336,56 @@ function AdminConfigPageInner() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Quem Somos */}
+        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+          <h2 className="mb-5 text-lg font-semibold text-primary">
+            Quem Somos
+          </h2>
+          <div className="space-y-5">
+            <Input
+              label="Título da página"
+              placeholder="Sobre nós"
+              {...register('quem_somos_titulo')}
+              error={errors.quem_somos_titulo?.message}
+            />
+            <Textarea
+              label="Texto da página"
+              rows={7}
+              placeholder="Conte a história da imobiliária, diferenciais e forma de atendimento..."
+              {...register('quem_somos_texto')}
+              error={errors.quem_somos_texto?.message}
+            />
+          </div>
+          <p className="mt-2 text-sm text-muted">
+            Este conteúdo aparece na aba Sobre nós do site público.
+          </p>
+        </section>
+
+        {/* Política de Privacidade */}
+        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+          <h2 className="mb-5 text-lg font-semibold text-primary">
+            Política de Privacidade
+          </h2>
+          <div className="space-y-5">
+            <Input
+              label="Título da página"
+              placeholder="Política de Privacidade"
+              {...register('politica_privacidade_titulo')}
+              error={errors.politica_privacidade_titulo?.message}
+            />
+            <Textarea
+              label="Texto da política"
+              rows={9}
+              placeholder="Informe como os dados dos visitantes e clientes são coletados, usados e protegidos..."
+              {...register('politica_privacidade_texto')}
+              error={errors.politica_privacidade_texto?.message}
+            />
+          </div>
+          <p className="mt-2 text-sm text-muted">
+            Este conteúdo aparece na página Política de Privacidade do site público.
+          </p>
         </section>
 
         {/* Links */}

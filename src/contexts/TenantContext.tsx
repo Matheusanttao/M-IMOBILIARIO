@@ -6,11 +6,16 @@ export interface TenantContextValue {
   empresaId: string
   empresaNome: string
   slug: string
+  logoUrl: string | null
   whatsapp: string | null
   email: string | null
   cidade: string | null
   estado: string | null
   financiamentoUrl: string | null
+  quemSomosTitulo: string | null
+  quemSomosTexto: string | null
+  politicaPrivacidadeTitulo: string | null
+  politicaPrivacidadeTexto: string | null
 }
 
 const TenantContext = createContext<TenantContextValue | null>(null)

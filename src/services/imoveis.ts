@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
 import type {
-  ImovelImagemRow,
   ImovelInsert,
   ImovelRow,
   ImovelUpdate,
@@ -17,7 +16,6 @@ const IMOVEL_SELECT = `
 `
 
 function applyFilters(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query: any,
   filters: PropertyListFilters,
   empresaId: string,
@@ -51,7 +49,6 @@ function applyFilters(
 }
 
 function applySort(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   query: any,
   sort: PropertySort,
 ) {
@@ -180,7 +177,7 @@ export async function createImovel(
 
   const { data: u } = await supabase
     .from('usuarios')
-    .select('empresa_id')
+    .select('empresa_id, role')
     .eq('id', user.id)
     .single()
   if (!u?.empresa_id) throw new Error('Perfil de usuário não encontrado.')
@@ -195,7 +192,8 @@ export async function createImovel(
   const payload = {
     ...row,
     empresa_id,
-    corretor_id: row.corretor_id ?? user.id,
+    corretor_id: row.corretor_id ?? (u.role === 'captador' ? null : user.id),
+    captador_id: row.captador_id ?? (u.role === 'captador' ? user.id : null),
     slug,
     updated_at: new Date().toISOString(),
   }

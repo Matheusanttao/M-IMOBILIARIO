@@ -2,12 +2,16 @@
 
 import { useTenant } from '@/contexts/TenantContext'
 
-export default function SobrePage() {
-  const { empresaNome, quemSomosTitulo, quemSomosTexto } = useTenant()
-  const title = quemSomosTitulo?.trim() || 'Sobre nós'
+export default function PoliticaPrivacidadePage() {
+  const {
+    empresaNome,
+    politicaPrivacidadeTitulo,
+    politicaPrivacidadeTexto,
+  } = useTenant()
+  const title = politicaPrivacidadeTitulo?.trim() || 'Política de Privacidade'
   const text =
-    quemSomosTexto?.trim() ||
-    'Somos uma imobiliária focada em experiência digital, transparência e atendimento consultivo. Nossa equipe acompanha cada etapa da jornada para conectar pessoas aos imóveis certos com segurança e clareza.'
+    politicaPrivacidadeTexto?.trim() ||
+    'Esta política descreve como tratamos informações fornecidas pelos visitantes e clientes. Os dados enviados pelos formulários do site são utilizados para atendimento, retorno comercial e melhoria dos serviços prestados pela imobiliária.'
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">

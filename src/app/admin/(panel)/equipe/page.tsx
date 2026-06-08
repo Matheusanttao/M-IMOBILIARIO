@@ -267,7 +267,7 @@ export default function AdminEquipePage() {
             Equipe
           </h1>
           <p className="mt-2 text-muted">
-            Gerencie corretores e permissões do seu time.
+            Gerencie corretores, captadores e permissões do seu time.
           </p>
         </div>
         <Button onClick={openAddModal} className="gap-2">

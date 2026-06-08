@@ -26,6 +26,10 @@ create table if not exists public.empresas (
   instagram text,
   facebook text,
   financiamento_url text,
+  quem_somos_titulo text,
+  quem_somos_texto text,
+  politica_privacidade_titulo text,
+  politica_privacidade_texto text,
   config jsonb not null default '{}',
   ativa boolean not null default true,
   trial_fim timestamptz,
@@ -172,6 +176,7 @@ create table if not exists public.imoveis (
   empresa_id uuid not null references public.empresas (id) on delete cascade,
   proprietario_id uuid references public.proprietarios (id) on delete set null,
   corretor_id uuid references auth.users (id) on delete set null,
+  captador_id uuid references auth.users (id) on delete set null,
   titulo text not null,
   descricao text,
   tipo text not null check (tipo in ('casa', 'apartamento', 'terreno', 'sala_comercial')),
@@ -203,6 +208,7 @@ create table if not exists public.imoveis (
 );
 
 create index if not exists imoveis_empresa_id_idx on public.imoveis (empresa_id);
+create index if not exists imoveis_captador_id_idx on public.imoveis (captador_id);
 create index if not exists imoveis_finalidade_idx on public.imoveis (finalidade);
 create index if not exists imoveis_cidade_idx on public.imoveis (cidade);
 create index if not exists imoveis_lat_lng_idx on public.imoveis (latitude, longitude)

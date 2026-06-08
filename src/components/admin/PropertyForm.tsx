@@ -25,6 +25,11 @@ const statusOptions = (
   Object.entries(IMOVEL_STATUS_LABELS) as [keyof typeof IMOVEL_STATUS_LABELS, string][]
 ).map(([value, label]) => ({ value, label }))
 
+interface CaptadorOption {
+  id: string
+  nome: string
+}
+
 export function PropertyForm() {
   const params = useParams<{ id: string }>()
   const paramId = params?.id
@@ -36,15 +41,13 @@ export function PropertyForm() {
   const [newFiles, setNewFiles] = useState<File[]>([])
   const [serverError, setServerError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
-  const [aiLoading, setAiLoading] = useState(false)
+  const [captadores, setCaptadores] = useState<CaptadorOption[]>([])
 
   const {
     register,
     handleSubmit,
     control,
     reset,
-    setValue,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema) as Resolver<PropertyFormValues>,
@@ -64,8 +67,28 @@ export function PropertyForm() {
       area: 80,
       status: 'disponivel',
       destaque: false,
+      captador_id: '',
     },
   })
+
+  useEffect(() => {
+    const supabase = createClient()
+    let cancelled = false
+
+    supabase
+      .from('usuarios')
+      .select('id,nome')
+      .eq('role', 'captador')
+      .eq('ativo', true)
+      .order('nome')
+      .then(({ data }) => {
+        if (!cancelled) setCaptadores((data as CaptadorOption[]) ?? [])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (isNew || !paramId) {
@@ -92,6 +115,7 @@ export function PropertyForm() {
           area: p.area ?? 80,
           status: p.status,
           destaque: p.destaque,
+          captador_id: p.captador_id ?? '',
         })
         setExistingImages(p.imovel_imagens ?? [])
       })
@@ -105,41 +129,6 @@ export function PropertyForm() {
       cancelled = true
     }
   }, [isNew, paramId, reset])
-
-  async function generateWithAI() {
-    setAiLoading(true)
-    setServerError(null)
-    try {
-      const values = getValues()
-      const res = await fetch('/api/ai/descricao', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          titulo: values.titulo,
-          tipo: values.tipo,
-          finalidade: values.finalidade,
-          cidade: values.cidade,
-          bairro: values.bairro,
-          quartos: values.quartos,
-          banheiros: values.banheiros,
-          vagas: values.vagas,
-          area: values.area,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setServerError(data.error ?? 'Erro ao gerar descrição com IA')
-        return
-      }
-      if (data.descricao) {
-        setValue('descricao', data.descricao, { shouldDirty: true })
-      }
-    } catch {
-      setServerError('Erro de conexão ao gerar descrição.')
-    } finally {
-      setAiLoading(false)
-    }
-  }
 
   function onPickFiles(e: ChangeEvent<HTMLInputElement>) {
     const list = e.target.files
@@ -181,6 +170,7 @@ export function PropertyForm() {
         area: data.area,
         status: data.status,
         destaque: data.destaque,
+        captador_id: data.captador_id || null,
       }
 
       if (isNew) {
@@ -252,24 +242,12 @@ export function PropertyForm() {
         className="space-y-6 rounded-2xl border border-slate-100 bg-white p-6 shadow-md sm:p-8"
       >
         <Input label="Título" {...register('titulo')} error={errors.titulo?.message} />
-        <div>
-          <Textarea
-            label="Descrição"
-            rows={5}
-            {...register('descricao')}
-            error={errors.descricao?.message}
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="mt-2"
-            loading={aiLoading}
-            onClick={generateWithAI}
-          >
-            {aiLoading ? 'Gerando…' : '✨ Gerar com IA'}
-          </Button>
-        </div>
+        <Textarea
+          label="Descrição"
+          rows={5}
+          {...register('descricao')}
+          error={errors.descricao?.message}
+        />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Select
@@ -285,6 +263,22 @@ export function PropertyForm() {
             error={errors.finalidade?.message}
           />
         </div>
+
+        <Select
+          label="Captador responsável"
+          options={[
+            { value: '', label: 'Nenhum captador vinculado' },
+            ...captadores.map((captador) => ({
+              value: captador.id,
+              label: captador.nome,
+            })),
+          ]}
+          {...register('captador_id')}
+          error={errors.captador_id?.message}
+        />
+        <p className="-mt-4 text-xs text-muted">
+          Use este campo para registrar quem conversou com o proprietário e captou o imóvel.
+        </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
@@ -392,7 +386,6 @@ export function PropertyForm() {
                 key={img.id}
                 className="group relative aspect-video overflow-hidden rounded-lg bg-slate-100"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img.url} alt="" className="size-full object-cover" />
                 <button
                   type="button"
@@ -408,7 +401,6 @@ export function PropertyForm() {
                 key={`${file.name}-${i}`}
                 className="group relative aspect-video overflow-hidden rounded-lg bg-slate-100"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={URL.createObjectURL(file)}
                   alt=""
