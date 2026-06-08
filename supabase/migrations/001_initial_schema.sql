@@ -1207,3 +1207,74 @@ for delete using (
   public.is_master()
   or (empresa_id = public.user_empresa_id() and usuario_id = auth.uid())
 );
+
+-- ============================================================
+-- Single-tenant: empresa principal e perfil automatico
+-- ============================================================
+insert into public.empresas (nome, slug, email, ativa)
+select 'Imobiliaria Principal', 'principal', 'contato@imobiliaria.local', true
+where not exists (select 1 from public.empresas);
+
+create or replace function public.default_empresa_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select id from public.empresas where ativa order by created_at asc limit 1;
+$$;
+
+insert into public.usuarios (id, empresa_id, nome, email, role, ativo)
+select
+  au.id,
+  public.default_empresa_id(),
+  coalesce(au.raw_user_meta_data->>'full_name', split_part(au.email, '@', 1)),
+  au.email,
+  'admin',
+  true
+from auth.users au
+where public.default_empresa_id() is not null
+on conflict (id) do update set
+  empresa_id = coalesce(public.usuarios.empresa_id, excluded.empresa_id),
+  nome = coalesce(nullif(public.usuarios.nome, ''), excluded.nome),
+  email = excluded.email,
+  ativo = true;
+
+create or replace function public.handle_new_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_empresa_id uuid;
+begin
+  select public.default_empresa_id() into v_empresa_id;
+
+  if v_empresa_id is null then
+    insert into public.empresas (nome, slug, email, ativa)
+    values ('Imobiliaria Principal', 'principal', new.email, true)
+    on conflict (slug) do update set ativa = true
+    returning id into v_empresa_id;
+  end if;
+
+  insert into public.usuarios (id, empresa_id, nome, email, role, ativo)
+  values (
+    new.id,
+    v_empresa_id,
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
+    new.email,
+    'admin',
+    true
+  )
+  on conflict (id) do nothing;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_auth_user();

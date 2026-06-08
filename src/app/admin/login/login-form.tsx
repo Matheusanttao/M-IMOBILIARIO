@@ -31,7 +31,7 @@ export function AdminLoginForm() {
       return
     }
     const supabase = createClient()
-    const { error: e } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: e } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
     })
@@ -39,6 +39,31 @@ export function AdminLoginForm() {
       setError(e.message)
       return
     }
+
+    const userId = authData.user?.id
+    if (!userId) {
+      setError('Login realizado, mas não foi possível carregar o usuário.')
+      return
+    }
+
+    const { data: perfil, error: perfilError } = await supabase
+      .from('usuarios')
+      .select('role, ativo')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (perfilError || !perfil) {
+      await supabase.auth.signOut()
+      setError('Usuário sem perfil no sistema. Rode o script SQL atualizado no Supabase e tente entrar novamente.')
+      return
+    }
+
+    if (!perfil.ativo) {
+      await supabase.auth.signOut()
+      setError('Usuário desativado. Fale com o administrador.')
+      return
+    }
+
     router.replace(next)
     router.refresh()
   }
