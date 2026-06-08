@@ -1,6 +1,11 @@
 import { cookies } from 'next/headers'
 import { createServerSupabaseClient, isServerSupabaseConfigured } from '@/lib/supabase/server'
 
+export type FinanciamentoLink = {
+  titulo: string
+  url: string
+}
+
 export type PublicEmpresa = {
   id: string
   nome: string
@@ -11,14 +16,40 @@ export type PublicEmpresa = {
   cidade: string | null
   estado: string | null
   financiamento_url: string | null
+  financiamentos: unknown
   quem_somos_titulo: string | null
   quem_somos_texto: string | null
+  quem_somos_imagem_url: string | null
   politica_privacidade_titulo: string | null
   politica_privacidade_texto: string | null
 }
 
 const PUBLIC_EMPRESA_SELECT =
-  'id,nome,slug,logo_url,whatsapp,email,cidade,estado,financiamento_url,quem_somos_titulo,quem_somos_texto,politica_privacidade_titulo,politica_privacidade_texto'
+  'id,nome,slug,logo_url,whatsapp,email,cidade,estado,financiamento_url,financiamentos,quem_somos_titulo,quem_somos_texto,quem_somos_imagem_url,politica_privacidade_titulo,politica_privacidade_texto'
+
+export function normalizePublicFinanciamentos(
+  value: unknown,
+  fallbackUrl?: string | null,
+): FinanciamentoLink[] {
+  if (Array.isArray(value)) {
+    const rows = value
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null
+        const row = item as Record<string, unknown>
+        const titulo = typeof row.titulo === 'string' ? row.titulo.trim() : ''
+        const url = typeof row.url === 'string' ? row.url.trim() : ''
+        return titulo && url ? { titulo, url } : null
+      })
+      .filter((item): item is FinanciamentoLink => Boolean(item))
+    if (rows.length) return rows
+  }
+
+  if (fallbackUrl?.trim()) {
+    return [{ titulo: 'Simular financiamento', url: fallbackUrl.trim() }]
+  }
+
+  return []
+}
 
 export async function getPublicEmpresa(): Promise<PublicEmpresa | null> {
   if (!isServerSupabaseConfigured()) return null

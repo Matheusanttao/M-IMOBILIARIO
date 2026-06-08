@@ -1,6 +1,6 @@
 import { TenantProvider } from '@/contexts/TenantContext'
 import { PublicLayout } from '@/components/layout/PublicLayout'
-import { getPublicEmpresa } from '@/lib/tenant'
+import { getPublicEmpresa, normalizePublicFinanciamentos } from '@/lib/tenant'
 
 export default async function PublicGroupLayout({
   children,
@@ -20,9 +20,13 @@ export default async function PublicGroupLayout({
         email: emp?.email ?? null,
         cidade: emp?.cidade ?? null,
         estado: emp?.estado ?? null,
-        financiamentoUrl: emp?.financiamento_url ?? null,
+        financiamentoLinks: normalizePublicFinanciamentos(
+          emp?.financiamentos,
+          emp?.financiamento_url,
+        ),
         quemSomosTitulo: emp?.quem_somos_titulo ?? null,
         quemSomosTexto: emp?.quem_somos_texto ?? null,
+        quemSomosImagemUrl: emp?.quem_somos_imagem_url ?? null,
         politicaPrivacidadeTitulo: emp?.politica_privacidade_titulo ?? null,
         politicaPrivacidadeTexto: emp?.politica_privacidade_texto ?? null,
       }}

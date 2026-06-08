@@ -3,7 +3,12 @@
 import { useTenant } from '@/contexts/TenantContext'
 
 export default function SobrePage() {
-  const { empresaNome, quemSomosTitulo, quemSomosTexto } = useTenant()
+  const {
+    empresaNome,
+    quemSomosTitulo,
+    quemSomosTexto,
+    quemSomosImagemUrl,
+  } = useTenant()
   const title = quemSomosTitulo?.trim() || 'Sobre nós'
   const text =
     quemSomosTexto?.trim() ||
@@ -15,6 +20,13 @@ export default function SobrePage() {
         {empresaNome}
       </p>
       <h1 className="mt-3 font-display text-3xl font-bold text-white">{title}</h1>
+      {quemSomosImagemUrl ? (
+        <img
+          src={quemSomosImagemUrl}
+          alt={title}
+          className="mt-8 aspect-[16/9] w-full rounded-2xl object-cover"
+        />
+      ) : null}
       <div className="mt-4 space-y-4 leading-relaxed text-white/65">
         {text.split(/\n{2,}/).map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>

@@ -1,16 +1,22 @@
 'use client'
 
-import { Suspense, useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect, useState, useCallback, type ChangeEvent } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useForm } from 'react-hook-form'
+import { useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Save, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Save, CheckCircle2, AlertCircle, Plus, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { cloudinaryConfigured, uploadImageToCloudinary } from '@/services/cloudinary'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
+
+const financiamentoSchema = z.object({
+  titulo: z.string(),
+  url: z.string().url('URL inválida').or(z.literal('')),
+})
 
 const configSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter ao menos 2 caracteres'),
@@ -29,9 +35,10 @@ const configSchema = z.object({
   cor_secundaria: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Cor inválida'),
   instagram: z.string().nullable(),
   facebook: z.string().nullable(),
-  financiamento_url: z.string().url('URL inválida').or(z.literal('')).nullable(),
+  financiamentos: z.array(financiamentoSchema),
   quem_somos_titulo: z.string().nullable(),
   quem_somos_texto: z.string().nullable(),
+  quem_somos_imagem_url: z.string().url('URL inválida').or(z.literal('')).nullable(),
   politica_privacidade_titulo: z.string().nullable(),
   politica_privacidade_texto: z.string().nullable(),
   logo_url: z.string().url('URL inválida').or(z.literal('')).nullable(),
@@ -40,7 +47,31 @@ const configSchema = z.object({
 type ConfigForm = z.infer<typeof configSchema>
 
 const FIELDS_SELECT =
-  'id,nome,slug,email,telefone,whatsapp,endereco,cidade,estado,documento,cor_primaria,cor_secundaria,instagram,facebook,financiamento_url,quem_somos_titulo,quem_somos_texto,politica_privacidade_titulo,politica_privacidade_texto,logo_url'
+  'id,nome,slug,email,telefone,whatsapp,endereco,cidade,estado,documento,cor_primaria,cor_secundaria,instagram,facebook,financiamento_url,financiamentos,quem_somos_titulo,quem_somos_texto,quem_somos_imagem_url,politica_privacidade_titulo,politica_privacidade_texto,logo_url'
+
+function normalizeFinanciamentos(
+  value: unknown,
+  fallbackUrl?: string | null,
+): { titulo: string; url: string }[] {
+  if (Array.isArray(value)) {
+    const rows = value
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null
+        const row = item as Record<string, unknown>
+        const titulo = typeof row.titulo === 'string' ? row.titulo : ''
+        const url = typeof row.url === 'string' ? row.url : ''
+        return titulo || url ? { titulo, url } : null
+      })
+      .filter((item): item is { titulo: string; url: string } => Boolean(item))
+    if (rows.length) return rows
+  }
+
+  if (fallbackUrl) {
+    return [{ titulo: 'Simular financiamento', url: fallbackUrl }]
+  }
+
+  return []
+}
 
 function AdminConfigPageInner() {
   const supabase = createClient()
@@ -51,12 +82,15 @@ function AdminConfigPageInner() {
     type: 'success' | 'error'
     message: string
   } | null>(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
 
   const {
     register,
     handleSubmit,
+    control,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<ConfigForm>({
     resolver: zodResolver(configSchema),
@@ -74,17 +108,28 @@ function AdminConfigPageInner() {
       cor_secundaria: '#d4a853',
       instagram: '',
       facebook: '',
-      financiamento_url: '',
+      financiamentos: [],
       quem_somos_titulo: '',
       quem_somos_texto: '',
+      quem_somos_imagem_url: '',
       politica_privacidade_titulo: '',
       politica_privacidade_texto: '',
       logo_url: '',
     },
   })
 
+  const {
+    fields: financiamentoFields,
+    append: appendFinanciamento,
+    remove: removeFinanciamento,
+  } = useFieldArray({
+    control,
+    name: 'financiamentos',
+  })
+
   const corPrimaria = watch('cor_primaria')
   const corSecundaria = watch('cor_secundaria')
+  const logoUrl = watch('logo_url')
 
   const loadEmpresa = useCallback(async () => {
     setLoading(true)
@@ -117,9 +162,10 @@ function AdminConfigPageInner() {
       cor_secundaria: data.cor_secundaria ?? '#d4a853',
       instagram: data.instagram ?? '',
       facebook: data.facebook ?? '',
-      financiamento_url: data.financiamento_url ?? '',
+      financiamentos: normalizeFinanciamentos(data.financiamentos, data.financiamento_url),
       quem_somos_titulo: data.quem_somos_titulo ?? '',
       quem_somos_texto: data.quem_somos_texto ?? '',
+      quem_somos_imagem_url: data.quem_somos_imagem_url ?? '',
       politica_privacidade_titulo: data.politica_privacidade_titulo ?? '',
       politica_privacidade_texto: data.politica_privacidade_texto ?? '',
       logo_url: data.logo_url ?? '',
@@ -136,7 +182,15 @@ function AdminConfigPageInner() {
     if (!empresaId) return
     setFeedback(null)
 
-    const payload: Record<string, unknown> = { ...values }
+    const payload: Record<string, unknown> = {
+      ...values,
+      financiamentos: values.financiamentos
+        .map((item) => ({
+          titulo: item.titulo.trim(),
+          url: item.url.trim(),
+        }))
+        .filter((item) => item.titulo && item.url),
+    }
     delete payload.slug
     for (const key of Object.keys(payload)) {
       if (payload[key] === '') payload[key] = null
@@ -155,6 +209,41 @@ function AdminConfigPageInner() {
     setFeedback({ type: 'success', message: 'Configurações salvas!' })
     reset(values)
     setTimeout(() => setFeedback(null), 4000)
+  }
+
+  async function handleLogoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    if (!cloudinaryConfigured()) {
+      setFeedback({
+        type: 'error',
+        message: 'Configure Cloudinary no .env para enviar a logo.',
+      })
+      return
+    }
+
+    setUploadingLogo(true)
+    setFeedback(null)
+    try {
+      const uploaded = await uploadImageToCloudinary(file)
+      setValue('logo_url', uploaded.secure_url, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+      setFeedback({
+        type: 'success',
+        message: 'Logo enviada. Clique em Salvar Configurações para gravar.',
+      })
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Erro ao enviar a logo.',
+      })
+    } finally {
+      setUploadingLogo(false)
+    }
   }
 
   if (loading) {
@@ -304,8 +393,27 @@ function AdminConfigPageInner() {
                 {...register('logo_url')}
                 error={errors.logo_url?.message}
               />
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <label className="inline-flex cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90">
+                  {uploadingLogo ? 'Enviando...' : 'Selecionar logo'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingLogo}
+                    onChange={handleLogoUpload}
+                  />
+                </label>
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Prévia do logo"
+                    className="size-16 rounded-xl border border-slate-200 object-contain"
+                  />
+                ) : null}
+              </div>
               <p className="mt-2 text-sm text-muted">
-                Use uma imagem quadrada. Ela aparece ao lado do nome da imobiliária no site.
+                Use uma imagem quadrada. Ao selecionar, ela é enviada ao Cloudinary e a URL é preenchida automaticamente.
               </p>
             </div>
 
@@ -350,6 +458,13 @@ function AdminConfigPageInner() {
               {...register('quem_somos_titulo')}
               error={errors.quem_somos_titulo?.message}
             />
+            <Input
+              label="Foto do Quem Somos"
+              type="url"
+              placeholder="https://..."
+              {...register('quem_somos_imagem_url')}
+              error={errors.quem_somos_imagem_url?.message}
+            />
             <Textarea
               label="Texto da página"
               rows={7}
@@ -393,15 +508,57 @@ function AdminConfigPageInner() {
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Links do Site
           </h2>
-          <Input
-            label="Link de financiamento"
-            type="url"
-            placeholder="https://..."
-            {...register('financiamento_url')}
-            error={errors.financiamento_url?.message}
-          />
+          <div className="space-y-4">
+            {financiamentoFields.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-muted">
+                Nenhuma opção de financiamento cadastrada.
+              </p>
+            ) : null}
+
+            {financiamentoFields.map((field, index) => (
+              <div
+                key={field.id}
+                className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-[1fr_1.4fr_auto]"
+              >
+                <Input
+                  label="Nome"
+                  placeholder="Ex.: Caixa"
+                  {...register(`financiamentos.${index}.titulo`)}
+                  error={errors.financiamentos?.[index]?.titulo?.message}
+                />
+                <Input
+                  label="Link"
+                  type="url"
+                  placeholder="https://..."
+                  {...register(`financiamentos.${index}.url`)}
+                  error={errors.financiamentos?.[index]?.url?.message}
+                />
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => removeFinanciamento(index)}
+                    title="Remover financiamento"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+            <Button
+              type="button"
+              variant="secondary"
+              className="gap-2"
+              onClick={() => appendFinanciamento({ titulo: '', url: '' })}
+            >
+              <Plus className="size-4" />
+              Adicionar financiamento
+            </Button>
+          </div>
           <p className="mt-2 text-sm text-muted">
-            Quando preenchido, o botão Financiamento aparece no site e redireciona para este link.
+            Cadastre quantas opções quiser. Elas aparecem no site para o cliente escolher.
           </p>
         </section>
 

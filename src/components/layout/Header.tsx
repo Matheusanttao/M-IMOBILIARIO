@@ -21,7 +21,7 @@ export function Header() {
   const pathname = usePathname()
   const path = pathname ?? ''
   const [open, setOpen] = useState(false)
-  const { empresaNome, logoUrl, whatsapp, financiamentoUrl } = useTenant()
+  const { empresaNome, logoUrl, whatsapp, financiamentoLinks } = useTenant()
   const initials = empresaNome
     .split(/\s+/)
     .filter(Boolean)
@@ -78,15 +78,13 @@ export function Header() {
               </Link>
               )
             })}
-            {financiamentoUrl ? (
-              <a
-                href={financiamentoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+            {financiamentoLinks.length ? (
+              <Link
+                href="/financiamento"
                 className="relative py-2 text-sm font-medium text-white/72 transition-colors hover:text-white"
               >
                 Financiamento
-              </a>
+              </Link>
             ) : null}
           </nav>
 

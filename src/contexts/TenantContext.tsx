@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, type ReactNode } from 'react'
+import type { FinanciamentoLink } from '@/lib/tenant'
 
 export interface TenantContextValue {
   empresaId: string
@@ -11,9 +12,10 @@ export interface TenantContextValue {
   email: string | null
   cidade: string | null
   estado: string | null
-  financiamentoUrl: string | null
+  financiamentoLinks: FinanciamentoLink[]
   quemSomosTitulo: string | null
   quemSomosTexto: string | null
+  quemSomosImagemUrl: string | null
   politicaPrivacidadeTitulo: string | null
   politicaPrivacidadeTexto: string | null
 }

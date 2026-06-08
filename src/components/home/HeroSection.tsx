@@ -26,7 +26,7 @@ const priceOptions = [
 
 export function HeroSection() {
   const router = useRouter()
-  const { financiamentoUrl } = useTenant()
+  const { financiamentoLinks } = useTenant()
   const [location, setLocation] = useState('')
   const [type, setType] = useState<PropertyType | ''>('')
   const [priceMin, setPriceMin] = useState('')
@@ -75,15 +75,24 @@ export function HeroSection() {
               >
                 Ver imóveis
               </Link>
-              {financiamentoUrl ? (
+              {financiamentoLinks.slice(0, 3).map((financiamento) => (
                 <a
-                  href={financiamentoUrl}
+                  key={`${financiamento.titulo}-${financiamento.url}`}
+                  href={financiamento.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 px-8 py-3 text-sm font-semibold text-white transition hover:border-accent hover:text-accent"
                 >
-                  Simular financiamento
+                  {financiamento.titulo}
                 </a>
+              ))}
+              {financiamentoLinks.length > 3 ? (
+                <Link
+                  href="/financiamento"
+                  className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 px-8 py-3 text-sm font-semibold text-white transition hover:border-accent hover:text-accent"
+                >
+                  Ver financiamentos
+                </Link>
               ) : null}
             </div>
           </div>
