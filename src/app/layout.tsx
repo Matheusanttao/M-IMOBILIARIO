@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { DM_Sans, Playfair_Display } from 'next/font/google'
 import { Providers } from '@/app/providers'
+import { ChunkLoadRecovery } from '@/components/layout/ChunkLoadRecovery'
 import '@/app/globals.css'
 
 const dmSans = DM_Sans({
@@ -45,6 +46,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${dmSans.variable} ${playfair.variable}`}>
       <body className="min-h-screen antialiased">
+        <ChunkLoadRecovery />
         <Providers>{children}</Providers>
       </body>
     </html>
