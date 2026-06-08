@@ -31,6 +31,18 @@ interface CaptadorOption {
   nome: string
 }
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === 'string') resolve(reader.result)
+      else reject(new Error('Não foi possível ler a imagem.'))
+    }
+    reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'))
+    reader.readAsDataURL(file)
+  })
+}
+
 export function PropertyForm() {
   const params = useParams<{ id: string }>()
   const paramId = params?.id
@@ -136,11 +148,7 @@ export function PropertyForm() {
   function onPickFiles(e: ChangeEvent<HTMLInputElement>) {
     const list = e.target.files
     if (!list?.length) return
-    if (!cloudinaryConfigured()) {
-      setServerError('Upload direto desabilitado. Insira a imagem por URL.')
-      e.target.value = ''
-      return
-    }
+    setServerError(null)
     setNewFiles((prev) => [...prev, ...Array.from(list)])
     e.target.value = ''
   }
@@ -220,6 +228,15 @@ export function PropertyForm() {
               setUploadProgress(`Enviando fotos ${done}/${total}…`)
             })
           : []
+      const embedded =
+        newFiles.length && !cloudinaryConfigured()
+          ? await Promise.all(
+              newFiles.map(async (file) => ({
+                secure_url: await fileToDataUrl(file),
+                public_id: `inline:${file.name}`,
+              })),
+            )
+          : []
       setUploadProgress(null)
 
       const rows = [
@@ -236,6 +253,12 @@ export function PropertyForm() {
           ordem: 0,
         })),
         ...uploaded.map((u) => ({
+          url: u.secure_url,
+          public_id: u.public_id,
+          is_capa: false,
+          ordem: 0,
+        })),
+        ...embedded.map((u) => ({
           url: u.secure_url,
           public_id: u.public_id,
           is_capa: false,
@@ -411,7 +434,7 @@ export function PropertyForm() {
           </label>
           {!cloudinaryConfigured() ? (
             <p className="mt-2 text-xs text-amber-700">
-              Upload direto desabilitado até configurar Cloudinary. Você ainda pode inserir imagens por URL abaixo.
+              Cloudinary não configurado. As imagens escolhidas serão salvas diretamente no banco.
             </p>
           ) : null}
           {uploadProgress ? (
