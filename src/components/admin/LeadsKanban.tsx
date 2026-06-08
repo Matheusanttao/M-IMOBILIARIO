@@ -13,7 +13,6 @@ const columns: { id: LeadStatus; title: string }[] = [
   { id: 'novo', title: 'Novo' },
   { id: 'contato', title: 'Contato' },
   { id: 'visita', title: 'Visita' },
-  { id: 'proposta', title: 'Proposta' },
   { id: 'negociacao', title: 'Negociação' },
   { id: 'contrato', title: 'Contrato' },
   { id: 'convertido', title: 'Convertido' },
@@ -28,7 +27,7 @@ export function LeadsKanban() {
     const map = new Map<LeadStatus, typeof leads>()
     for (const c of columns) map.set(c.id, [])
     for (const l of leads) {
-      const col = map.get(l.status) ?? map.get('novo')!
+      const col = map.get(l.status) ?? map.get('negociacao')!
       col.push(l)
     }
     return map
@@ -61,7 +60,7 @@ export function LeadsKanban() {
 
   return (
     <div className="overflow-x-auto pb-4">
-      <div className="flex min-w-[1800px] gap-3">
+      <div className="flex min-w-[1600px] gap-3">
         {columns.map((col) => (
           <div
             key={col.id}

@@ -17,7 +17,6 @@ import {
   FileSignature,
   Map,
   Bell,
-  Crown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -37,7 +36,7 @@ const nav: {
   { href: '/admin/proprietarios', label: 'Clientes', icon: UserCircle, modulo: 'proprietarios' },
   { href: '/admin/leads', label: 'Leads', icon: MessageSquare, modulo: 'crm' },
   { href: '/admin/agenda', label: 'Agendamentos', icon: Calendar, modulo: 'agenda' },
-  { href: '/admin/contratos', label: 'Propostas', icon: FileSignature, modulo: 'contratos' },
+  { href: '/admin/contratos', label: 'Contratos', icon: FileSignature, modulo: 'contratos' },
   { href: '/admin/financeiro', label: 'Financeiro', icon: Wallet, modulo: 'financeiro' },
   { href: '/admin/mapa', label: 'Mapa', icon: Map, modulo: 'mapa' },
   { href: '/admin/equipe', label: 'Equipe', icon: Users, modulo: 'equipe' },
@@ -103,22 +102,6 @@ export function AdminSidebar() {
       </nav>
 
       <div className="space-y-4 px-4 pb-4">
-        <div className="rounded-2xl border border-accent/25 bg-gradient-to-b from-accent/15 to-transparent p-4">
-          <p className="flex items-center gap-2 text-sm font-semibold text-white">
-            <Crown className="size-4 text-accent" />
-            Plano atual
-          </p>
-          <p className="mt-1 text-xs text-white/55">
-            Consulte os recursos liberados para esta imobiliária.
-          </p>
-          <Link
-            href="/admin/configuracoes"
-            className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-background transition hover:bg-accent-hover"
-          >
-            Ver plano
-          </Link>
-        </div>
-
         <div className="flex items-center gap-3 border-t border-white/10 pt-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <div className="flex size-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-sm font-semibold text-white">

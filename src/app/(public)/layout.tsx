@@ -1,36 +1,25 @@
-import { cookies } from 'next/headers'
-import { createServerSupabaseClient, isServerSupabaseConfigured } from '@/lib/supabase/server'
 import { TenantProvider } from '@/contexts/TenantContext'
 import { PublicLayout } from '@/components/layout/PublicLayout'
+import { getPublicEmpresa } from '@/lib/tenant'
 
 export default async function PublicGroupLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = await cookies()
-  const tenantSlug = cookieStore.get('tenant_slug')?.value ?? 'demo'
-  const emp = isServerSupabaseConfigured()
-    ? (
-        await (await createServerSupabaseClient())
-          .from('empresas')
-          .select('id,nome,slug,whatsapp,email,cidade,estado')
-          .eq('slug', tenantSlug)
-          .eq('ativa', true)
-          .maybeSingle()
-      ).data
-    : null
+  const emp = await getPublicEmpresa()
 
   return (
     <TenantProvider
       value={{
         empresaId: emp?.id ?? '',
         empresaNome: emp?.nome ?? 'Imobiliária',
-        slug: emp?.slug ?? tenantSlug,
+        slug: emp?.slug ?? '',
         whatsapp: emp?.whatsapp ?? null,
         email: emp?.email ?? null,
         cidade: emp?.cidade ?? null,
         estado: emp?.estado ?? null,
+        financiamentoUrl: emp?.financiamento_url ?? null,
       }}
     >
       <PublicLayout>{children}</PublicLayout>

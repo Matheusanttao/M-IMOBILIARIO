@@ -17,7 +17,6 @@ import {
   Building2,
   DollarSign,
   FileSignature,
-  FileText,
   Handshake,
   TrendingUp,
   UserPlus,
@@ -88,12 +87,6 @@ const activities = [
     time: 'Há 3h',
   },
   {
-    icon: FileText,
-    title: 'Proposta enviada',
-    text: 'Casa em Alphaville para João Santos',
-    time: 'Há 5h',
-  },
-  {
     icon: TrendingUp,
     title: 'Negociação atualizada',
     text: 'Venda - Apartamento Jardins',
@@ -141,7 +134,6 @@ const mostViewed = [
 const funnel = [
   { stage: 'Leads', value: 156, pct: 100, width: 100, color: '#1f2d3d' },
   { stage: 'Qualificados', value: 89, pct: 57, width: 80, color: '#3b4a5e' },
-  { stage: 'Propostas', value: 45, pct: 29, width: 62, color: '#64748b' },
   { stage: 'Negociação', value: 23, pct: 15, width: 46, color: '#b8923f' },
   { stage: 'Fechados', value: 12, pct: 8, width: 32, color: '#d4a853' },
 ]

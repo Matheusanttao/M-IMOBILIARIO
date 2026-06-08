@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient, isServerSupabaseConfigured } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { getPublicEmpresa } from '@/lib/tenant'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,13 +14,7 @@ export async function generateMetadata({
 
   const { slug } = await params
   const supabase = await createServerSupabaseClient()
-  const cookieStore = await cookies()
-  const tenant = cookieStore.get('tenant_slug')?.value ?? 'demo'
-  const { data: emp } = await supabase
-    .from('empresas')
-    .select('id')
-    .eq('slug', tenant)
-    .maybeSingle()
+  const emp = await getPublicEmpresa()
   const { data: post } = await supabase
     .from('blog_posts')
     .select('titulo, seo_titulo, seo_descricao')
@@ -44,13 +38,7 @@ export default async function BlogPostPage({
 
   const { slug } = await params
   const supabase = await createServerSupabaseClient()
-  const cookieStore = await cookies()
-  const tenant = cookieStore.get('tenant_slug')?.value ?? 'demo'
-  const { data: emp } = await supabase
-    .from('empresas')
-    .select('id')
-    .eq('slug', tenant)
-    .maybeSingle()
+  const emp = await getPublicEmpresa()
   const { data: post } = await supabase
     .from('blog_posts')
     .select('*')

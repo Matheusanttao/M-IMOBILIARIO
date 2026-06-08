@@ -20,7 +20,7 @@ export function MobileMenu({
   open: boolean
   onClose: () => void
 }) {
-  const { empresaNome, whatsapp } = useTenant()
+  const { empresaNome, whatsapp, financiamentoUrl } = useTenant()
   const initials = empresaNome
     .split(/\s+/)
     .filter(Boolean)
@@ -70,6 +70,17 @@ export function MobileMenu({
               {l.label}
             </Link>
           ))}
+          {financiamentoUrl ? (
+            <a
+              href={financiamentoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onClose}
+              className="rounded-lg px-3 py-2 text-lg font-medium text-white/80 hover:bg-white/10 hover:text-white"
+            >
+              Financiamento
+            </a>
+          ) : null}
         </nav>
         <div className="mt-auto space-y-4 border-t border-white/10 pt-6">
           {phoneDigits ? (

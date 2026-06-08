@@ -25,6 +25,7 @@ create table if not exists public.empresas (
   whatsapp text,
   instagram text,
   facebook text,
+  financiamento_url text,
   config jsonb not null default '{}',
   ativa boolean not null default true,
   trial_fim timestamptz,

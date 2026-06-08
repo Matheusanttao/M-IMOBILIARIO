@@ -28,13 +28,14 @@ const configSchema = z.object({
   cor_secundaria: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Cor inválida'),
   instagram: z.string().nullable(),
   facebook: z.string().nullable(),
+  financiamento_url: z.string().url('URL inválida').or(z.literal('')).nullable(),
   logo_url: z.string().url('URL inválida').or(z.literal('')).nullable(),
 })
 
 type ConfigForm = z.infer<typeof configSchema>
 
 const FIELDS_SELECT =
-  'id,nome,slug,email,telefone,whatsapp,endereco,cidade,estado,documento,cor_primaria,cor_secundaria,instagram,facebook,logo_url'
+  'id,nome,slug,email,telefone,whatsapp,endereco,cidade,estado,documento,cor_primaria,cor_secundaria,instagram,facebook,financiamento_url,logo_url'
 
 function AdminConfigPageInner() {
   const supabase = createClient()
@@ -68,6 +69,7 @@ function AdminConfigPageInner() {
       cor_secundaria: '#d4a853',
       instagram: '',
       facebook: '',
+      financiamento_url: '',
       logo_url: '',
     },
   })
@@ -106,6 +108,7 @@ function AdminConfigPageInner() {
       cor_secundaria: data.cor_secundaria ?? '#d4a853',
       instagram: data.instagram ?? '',
       facebook: data.facebook ?? '',
+      financiamento_url: data.financiamento_url ?? '',
       logo_url: data.logo_url ?? '',
     })
     setLoading(false)
@@ -317,6 +320,23 @@ function AdminConfigPageInner() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Links */}
+        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+          <h2 className="mb-5 text-lg font-semibold text-primary">
+            Links do Site
+          </h2>
+          <Input
+            label="Link de financiamento"
+            type="url"
+            placeholder="https://..."
+            {...register('financiamento_url')}
+            error={errors.financiamento_url?.message}
+          />
+          <p className="mt-2 text-sm text-muted">
+            Quando preenchido, o botão Financiamento aparece no site e redireciona para este link.
+          </p>
         </section>
 
         {/* Redes Sociais */}

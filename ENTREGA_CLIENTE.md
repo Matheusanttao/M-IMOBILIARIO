@@ -9,12 +9,10 @@ Use este checklist antes de publicar ou entregar o site para uma imobiliaria.
 - Configurar as variaveis na Vercel ou no servidor:
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  - `NEXT_PUBLIC_DEFAULT_TENANT_SLUG`
   - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
   - `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`
   - `NEXT_PUBLIC_SITE_URL`
   - `NEXT_PUBLIC_WHATSAPP_NUMBER`
-  - `SUPABASE_SERVICE_ROLE_KEY`
   - `OPENAI_API_KEY`, se a IA estiver habilitada
 - Configurar dominio final e atualizar `NEXT_PUBLIC_SITE_URL`.
 

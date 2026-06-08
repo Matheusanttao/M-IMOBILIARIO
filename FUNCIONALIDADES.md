@@ -18,10 +18,7 @@ O M. Imobiliario e uma plataforma SaaS multi-tenant para imobiliarias. Cada imob
 ## Multi-tenant
 
 - Separacao de dados por empresa/imobiliaria.
-- Identificacao do tenant por slug.
-- Middleware para definir o `tenant_slug`.
-- Suporte a subdominio em producao via `NEXT_PUBLIC_BASE_DOMAIN`.
-- Tenant padrao em desenvolvimento via `NEXT_PUBLIC_DEFAULT_TENANT_SLUG`.
+- Em instalacoes de empresa unica, o site publico usa a primeira empresa ativa cadastrada.
 - Politicas de Row Level Security no Supabase previstas pelas migrations.
 
 ## Site publico

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { createServerSupabaseClient, isServerSupabaseConfigured } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { getPublicEmpresa } from '@/lib/tenant'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,13 +19,7 @@ export default async function CorretoresPage() {
 
   if (isServerSupabaseConfigured()) {
     const supabase = await createServerSupabaseClient()
-    const cookieStore = await cookies()
-    const tenant = cookieStore.get('tenant_slug')?.value ?? 'demo'
-    const { data: emp } = await supabase
-      .from('empresas')
-      .select('id')
-      .eq('slug', tenant)
-      .maybeSingle()
+    const emp = await getPublicEmpresa()
 
     const { data } = await supabase
       .from('usuarios')

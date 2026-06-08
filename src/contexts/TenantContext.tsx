@@ -10,6 +10,7 @@ export interface TenantContextValue {
   email: string | null
   cidade: string | null
   estado: string | null
+  financiamentoUrl: string | null
 }
 
 const TenantContext = createContext<TenantContextValue | null>(null)

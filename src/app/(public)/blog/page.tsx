@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createServerSupabaseClient, isServerSupabaseConfigured } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { getPublicEmpresa } from '@/lib/tenant'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,14 +13,8 @@ export default async function BlogPage() {
   let posts: { id: string; titulo: string; slug: string; created_at: string }[] = []
 
   if (isServerSupabaseConfigured()) {
-    const cookieStore = await cookies()
-    const slug = cookieStore.get('tenant_slug')?.value ?? 'demo'
     const supabase = await createServerSupabaseClient()
-    const { data: emp } = await supabase
-      .from('empresas')
-      .select('id')
-      .eq('slug', slug)
-      .maybeSingle()
+    const emp = await getPublicEmpresa()
 
     const { data } = await supabase
       .from('blog_posts')

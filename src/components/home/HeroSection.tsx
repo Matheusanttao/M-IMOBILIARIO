@@ -9,6 +9,7 @@ import type { PropertyType } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
+import { useTenant } from '@/contexts/TenantContext'
 
 const typeOptions = [
   { value: '', label: 'Todos os tipos' },
@@ -25,6 +26,7 @@ const priceOptions = [
 
 export function HeroSection() {
   const router = useRouter()
+  const { financiamentoUrl } = useTenant()
   const [location, setLocation] = useState('')
   const [type, setType] = useState<PropertyType | ''>('')
   const [priceMin, setPriceMin] = useState('')
@@ -66,12 +68,24 @@ export function HeroSection() {
               Imóveis selecionados com excelência para realizar os melhores
               negócios e viver momentos inesquecíveis.
             </p>
-            <Link
-              href="/imoveis"
-              className="mt-8 inline-flex items-center justify-center rounded-md bg-accent px-8 py-3 text-sm font-semibold text-background shadow-lg shadow-accent/20 transition hover:bg-accent-hover"
-            >
-              Ver imóveis
-            </Link>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/imoveis"
+                className="inline-flex items-center justify-center rounded-md bg-accent px-8 py-3 text-sm font-semibold text-background shadow-lg shadow-accent/20 transition hover:bg-accent-hover"
+              >
+                Ver imóveis
+              </Link>
+              {financiamentoUrl ? (
+                <a
+                  href={financiamentoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 px-8 py-3 text-sm font-semibold text-white transition hover:border-accent hover:text-accent"
+                >
+                  Simular financiamento
+                </a>
+              ) : null}
+            </div>
           </div>
 
           <div className="relative hidden min-h-[440px] lg:block">

@@ -113,6 +113,15 @@ export default function AdminBlogPage() {
     setSaving(true)
     setSaveError(null)
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      setSaveError('Usuário não autenticado.')
+      setSaving(false)
+      return
+    }
+
     const payload = {
       titulo: draft.titulo.trim(),
       slug: draft.slug.trim() || slugify(draft.titulo),
@@ -141,7 +150,22 @@ export default function AdminBlogPage() {
         return
       }
     } else {
-      const { error: err } = await supabase.from('blog_posts').insert(payload)
+      const { data: usuario, error: userError } = await supabase
+        .from('usuarios')
+        .select('empresa_id')
+        .eq('id', user.id)
+        .single()
+      if (userError || !usuario?.empresa_id) {
+        setSaveError(userError?.message ?? 'Empresa do usuário não encontrada.')
+        setSaving(false)
+        return
+      }
+
+      const { error: err } = await supabase.from('blog_posts').insert({
+        ...payload,
+        empresa_id: usuario.empresa_id,
+        autor_id: user.id,
+      })
       if (err) {
         setSaveError(err.message)
         setSaving(false)

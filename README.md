@@ -44,7 +44,6 @@ Plataforma **SaaS multi-tenant** para imobiliárias: site público, painel da im
 5. Copie `.env.example` para `.env.local` e preencha:
 
    - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_DEFAULT_TENANT_SLUG` (ex.: `demo` — empresa seed na migration)
    - `NEXT_PUBLIC_CLOUDINARY_*`, `NEXT_PUBLIC_SITE_URL`
    - Opcional: OpenAI, WhatsApp (ver `.env.example`)
 
@@ -71,7 +70,7 @@ Plataforma **SaaS multi-tenant** para imobiliárias: site público, painel da im
 | Login admin | `/admin/login` |
 | Master SaaS | `/master`, `/master/empresas`, `/master/logs`, … |
 
-**Tenant no site público:** o middleware define o cookie `tenant_slug` (subdomínio em produção ou `NEXT_PUBLIC_DEFAULT_TENANT_SLUG` em localhost).
+**Site público:** quando não há slug de tenant configurado, o app usa a primeira empresa ativa cadastrada.
 
 ## API / integrações
 
