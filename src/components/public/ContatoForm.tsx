@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 
 export function ContatoForm() {
-  const { empresaId, empresaNome, whatsapp } = useTenant()
+  const { empresaId, empresaNome, whatsapp, email } = useTenant()
   const [serverError, setServerError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
@@ -144,6 +144,17 @@ export function ContatoForm() {
                     className="text-accent hover:underline"
                   >
                     {whatsapp}
+                  </a>
+                </div>
+              </li>
+            )}
+            {email && (
+              <li className="flex items-start gap-3">
+                <Mail className="mt-0.5 size-4 shrink-0 text-accent" />
+                <div>
+                  <span className="block font-medium text-white">E-mail</span>
+                  <a href={`mailto:${email}`} className="text-accent hover:underline">
+                    {email}
                   </a>
                 </div>
               </li>

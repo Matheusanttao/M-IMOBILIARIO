@@ -69,6 +69,20 @@ export async function fetchImoveisDoProprietario(
   return (data as ImovelProprietarioRow[]) ?? []
 }
 
+export async function fetchProprietariosDoImovel(
+  imovelId: string,
+): Promise<ImovelProprietarioRow[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('imovel_proprietarios')
+    .select('*')
+    .eq('imovel_id', imovelId)
+    .order('principal', { ascending: false })
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data as ImovelProprietarioRow[]) ?? []
+}
+
 export async function linkProprietarioImovel(row: {
   empresa_id: string
   imovel_id: string
@@ -88,4 +102,34 @@ export async function linkProprietarioImovel(row: {
     { onConflict: 'imovel_id,proprietario_id' },
   )
   if (error) throw error
+}
+
+export async function replaceProprietariosImovel(
+  imovelId: string,
+  rows: {
+    empresa_id: string
+    proprietario_id: string
+    percentual: number
+    principal?: boolean
+  }[],
+): Promise<void> {
+  const supabase = createClient()
+  const { error: delErr } = await supabase
+    .from('imovel_proprietarios')
+    .delete()
+    .eq('imovel_id', imovelId)
+  if (delErr) throw delErr
+
+  if (!rows.length) return
+
+  const { error: insErr } = await supabase.from('imovel_proprietarios').insert(
+    rows.map((row) => ({
+      empresa_id: row.empresa_id,
+      imovel_id: imovelId,
+      proprietario_id: row.proprietario_id,
+      percentual: row.percentual,
+      principal: row.principal ?? false,
+    })),
+  )
+  if (insErr) throw insErr
 }

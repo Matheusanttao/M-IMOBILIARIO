@@ -47,7 +47,7 @@ const configSchema = z.object({
 type ConfigForm = z.infer<typeof configSchema>
 
 const FIELDS_SELECT =
-  'id,nome,slug,email,telefone,whatsapp,endereco,cidade,estado,documento,cor_primaria,cor_secundaria,instagram,facebook,financiamento_url,financiamentos,quem_somos_titulo,quem_somos_texto,quem_somos_imagem_url,politica_privacidade_titulo,politica_privacidade_texto,logo_url'
+  'id,nome,slug,email,telefone,whatsapp,endereco,cidade,estado,documento,cor_primaria,cor_secundaria,instagram,facebook,financiamentos,quem_somos_titulo,quem_somos_texto,quem_somos_imagem_url,politica_privacidade_titulo,politica_privacidade_texto,logo_url'
 
 function normalizeFinanciamentos(
   value: unknown,
@@ -162,7 +162,7 @@ function AdminConfigPageInner() {
       cor_secundaria: data.cor_secundaria ?? '#d4a853',
       instagram: data.instagram ?? '',
       facebook: data.facebook ?? '',
-      financiamentos: normalizeFinanciamentos(data.financiamentos, data.financiamento_url),
+      financiamentos: normalizeFinanciamentos(data.financiamentos),
       quem_somos_titulo: data.quem_somos_titulo ?? '',
       quem_somos_texto: data.quem_somos_texto ?? '',
       quem_somos_imagem_url: data.quem_somos_imagem_url ?? '',

@@ -35,6 +35,9 @@ export const propertyFormSchema = z.object({
   ] as const),
   destaque: z.boolean(),
   captador_id: z.string().optional(),
+  proprietario_id: z.string().optional(),
+  proprietario_percentual: z.coerce.number().min(0).max(100).optional(),
+  proprietario_principal: z.boolean().optional(),
 })
 
 export type PropertyFormValues = z.infer<typeof propertyFormSchema>

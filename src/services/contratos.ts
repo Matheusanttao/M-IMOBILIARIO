@@ -20,6 +20,17 @@ export async function fetchContratos() {
   return data ?? []
 }
 
+export async function createContrato(input: Record<string, unknown>): Promise<string> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('contratos')
+    .insert(input)
+    .select('id')
+    .single()
+  if (error) throw error
+  return data!.id as string
+}
+
 export async function createProposta(
   input: Record<string, unknown>,
 ): Promise<string> {

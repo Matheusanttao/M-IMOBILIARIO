@@ -14,6 +14,7 @@ export function AdminLoginForm() {
   const searchParams = useSearchParams()
   const next = searchParams?.get('next') ?? '/admin'
   const [error, setError] = useState<string | null>(null)
+  const [loginStatus, setLoginStatus] = useState<string | null>(null)
 
   const {
     register,
@@ -26,8 +27,10 @@ export function AdminLoginForm() {
 
   async function onSubmit(data: LoginFormValues) {
     setError(null)
+    setLoginStatus('Verificando credenciais...')
     if (!isSupabaseConfigured()) {
       setError(SUPABASE_SETUP_MESSAGE)
+      setLoginStatus(null)
       return
     }
     const supabase = createClient()
@@ -37,36 +40,62 @@ export function AdminLoginForm() {
     })
     if (e) {
       setError(e.message)
+      setLoginStatus(null)
       return
     }
 
+    setLoginStatus('Carregando perfil...')
     const userId = authData.user?.id
     if (!userId) {
       setError('Login realizado, mas não foi possível carregar o usuário.')
+      setLoginStatus(null)
       return
     }
 
     const { data: perfil, error: perfilError } = await supabase
       .from('usuarios')
-      .select('role, ativo')
+      .select('role, ativo, empresa_id')
       .eq('id', userId)
       .maybeSingle()
 
     if (perfilError || !perfil) {
       await supabase.auth.signOut()
       setError('Usuário sem perfil no sistema. Rode o script SQL atualizado no Supabase e tente entrar novamente.')
+      setLoginStatus(null)
       return
     }
 
     if (!perfil.ativo) {
       await supabase.auth.signOut()
       setError('Usuário desativado. Fale com o administrador.')
+      setLoginStatus(null)
       return
     }
 
+    if (perfil.role) {
+      window.sessionStorage.setItem('admin_user_role', perfil.role)
+    }
+
+    setLoginStatus('Preparando painel...')
+    if (perfil.empresa_id) {
+      const { data: empresa } = await supabase
+        .from('empresas')
+        .select('slug')
+        .eq('id', perfil.empresa_id)
+        .eq('ativa', true)
+        .maybeSingle()
+
+      if (empresa?.slug) {
+        document.cookie = `tenant_slug=${encodeURIComponent(empresa.slug)}; path=/; max-age=31536000; samesite=lax`
+      }
+    }
+
+    setLoginStatus('Entrando no painel...')
     router.replace(next)
     router.refresh()
   }
+
+  const loading = isSubmitting || Boolean(loginStatus)
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
@@ -78,6 +107,7 @@ export function AdminLoginForm() {
             label="E-mail"
             type="email"
             autoComplete="email"
+            disabled={loading}
             {...register('email')}
             error={errors.email?.message}
           />
@@ -85,14 +115,20 @@ export function AdminLoginForm() {
             label="Senha"
             type="password"
             autoComplete="current-password"
+            disabled={loading}
             {...register('password')}
             error={errors.password?.message}
           />
+          {loginStatus ? (
+            <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-primary">
+              {loginStatus}
+            </p>
+          ) : null}
           {error ? (
             <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
           ) : null}
-          <Button type="submit" className="w-full" loading={isSubmitting}>
-            Entrar
+          <Button type="submit" className="w-full" loading={loading}>
+            {loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>
       </div>

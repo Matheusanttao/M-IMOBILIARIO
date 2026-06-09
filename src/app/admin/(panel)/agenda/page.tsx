@@ -72,7 +72,9 @@ export default function AdminAgendaPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [editVisita, setEditVisita] = useState<VisitaWithRels | null>(null)
 
-  const [imoveis, setImoveis] = useState<Pick<ImovelRow, 'id' | 'titulo'>[]>([])
+  const [imoveis, setImoveis] = useState<
+    Pick<ImovelRow, 'id' | 'titulo' | 'empresa_id'>[]
+  >([])
   const [leads, setLeads] = useState<Pick<LeadRow, 'id' | 'name'>[]>([])
 
   const supabase = useMemo(() => createClient(), [])
@@ -95,7 +97,7 @@ export default function AdminAgendaPage() {
     const [imRes, ldRes] = await Promise.all([
       supabase
         .from('imoveis')
-        .select('id, titulo')
+        .select('id, titulo, empresa_id')
         .eq('status', 'disponivel')
         .order('titulo'),
       supabase.from('leads').select('id, name').order('name'),
@@ -392,7 +394,7 @@ function CreateVisitaModal({
   onClose: () => void
   onCreated: () => void
   day: Date
-  imoveis: Pick<ImovelRow, 'id' | 'titulo'>[]
+  imoveis: Pick<ImovelRow, 'id' | 'titulo' | 'empresa_id'>[]
   leads: Pick<LeadRow, 'id' | 'name'>[]
   supabase: ReturnType<typeof createClient>
 }) {
@@ -421,6 +423,13 @@ function CreateVisitaModal({
     setSaving(true)
     setError(null)
 
+    const selectedImovel = imoveis.find((imovel) => imovel.id === imovelId)
+    if (!selectedImovel) {
+      setSaving(false)
+      setError('Imóvel selecionado não encontrado.')
+      return
+    }
+
     const [h, m] = time.split(':').map(Number)
     const dataHora = dateFnsSet(day, {
       hours: h,
@@ -430,6 +439,7 @@ function CreateVisitaModal({
     })
 
     const { error: dbErr } = await supabase.from('visitas').insert({
+      empresa_id: selectedImovel.empresa_id,
       imovel_id: imovelId,
       lead_id: leadId || null,
       data_hora: dataHora.toISOString(),

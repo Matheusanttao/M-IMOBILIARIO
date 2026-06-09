@@ -17,6 +17,18 @@ import {
   YAxis,
 } from 'recharts'
 
+function parseMoneyBR(value: string) {
+  const normalized = value.trim().replace(/\./g, '').replace(',', '.')
+  return Number(normalized)
+}
+
+function formatCurrencyBRL(value: number) {
+  return Number(value).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+}
+
 export default function AdminFinanceiroPage() {
   const [rows, setRows] = useState<FinanceiroLancamentoRow[]>([])
   const [empresaId, setEmpresaId] = useState<string | null>(null)
@@ -47,8 +59,8 @@ export default function AdminFinanceiroPage() {
     (acc, r) => {
       const key = r.data_vencimento.slice(0, 7)
       if (!acc[key]) acc[key] = { name: key, receita: 0, despesa: 0 }
-      if (r.tipo === 'receita' && r.status === 'pago') acc[key].receita += Number(r.valor)
-      if (r.tipo === 'despesa' && r.status === 'pago') acc[key].despesa += Number(r.valor)
+      if (r.tipo === 'receita') acc[key].receita += Number(r.valor)
+      if (r.tipo === 'despesa') acc[key].despesa += Number(r.valor)
       return acc
     },
     {},
@@ -57,8 +69,8 @@ export default function AdminFinanceiroPage() {
 
   async function adicionar() {
     if (!empresaId || !desc.trim()) return
-    const v = Number(valor.replace(',', '.'))
-    if (!Number.isFinite(v)) return
+    const v = parseMoneyBR(valor)
+    if (!Number.isFinite(v) || v <= 0) return
     const hoje = new Date().toISOString().slice(0, 10)
     await saveLancamento({
       empresa_id: empresaId,
@@ -83,29 +95,37 @@ export default function AdminFinanceiroPage() {
   return (
     <div>
       <h1 className="font-display text-3xl font-bold text-primary">Financeiro</h1>
-      <p className="mt-1 text-muted">Contas a pagar / receber e fluxo (lançamentos pagos por mês).</p>
+      <p className="mt-1 text-muted">Contas a pagar / receber e fluxo mensal por vencimento.</p>
 
-      <div className="mt-8 h-72 rounded-2xl border border-slate-100 bg-white p-4 shadow-md">
+      <div className="mt-8 h-72 rounded-2xl border border-slate-100 bg-white p-4 text-slate-700 shadow-md">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chart}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" fontSize={12} />
-            <YAxis fontSize={12} />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="receita" fill="#1a365d" name="Receita (pago)" />
-            <Bar dataKey="despesa" fill="#d4a853" name="Despesa (pago)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="name" fontSize={12} stroke="#475569" />
+            <YAxis fontSize={12} stroke="#475569" />
+            <Tooltip
+              formatter={(value) => formatCurrencyBRL(Number(value))}
+              contentStyle={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                color: '#0f172a',
+              }}
+            />
+            <Legend wrapperStyle={{ color: '#334155' }} />
+            <Bar dataKey="receita" fill="#1a365d" name="Receita" />
+            <Bar dataKey="despesa" fill="#d4a853" name="Despesa" />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-10 grid gap-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-md md:grid-cols-3">
+      <div className="mt-10 grid gap-4 rounded-2xl border border-slate-100 bg-white p-6 text-slate-800 shadow-md md:grid-cols-3">
         <Input label="Descrição" value={desc} onChange={(e) => setDesc(e.target.value)} />
         <Input label="Valor" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" />
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700">Tipo</label>
           <select
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
             value={tipo}
             onChange={(e) => setTipo(e.target.value as 'receita' | 'despesa')}
           >
@@ -120,10 +140,10 @@ export default function AdminFinanceiroPage() {
         </div>
       </div>
 
-      <div className="mt-10 overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-md">
+      <div className="mt-10 overflow-x-auto rounded-2xl border border-slate-100 bg-white text-slate-800 shadow-md">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="border-b bg-slate-50 text-xs uppercase text-muted">
+            <tr className="border-b bg-slate-50 text-xs uppercase text-slate-500">
               <th className="px-3 py-2">Descrição</th>
               <th className="px-3 py-2">Tipo</th>
               <th className="px-3 py-2">Valor</th>
@@ -133,12 +153,14 @@ export default function AdminFinanceiroPage() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-b border-slate-50">
-                <td className="px-3 py-2">{r.descricao}</td>
-                <td className="px-3 py-2">{r.tipo}</td>
-                <td className="px-3 py-2">R$ {Number(r.valor).toLocaleString('pt-BR')}</td>
-                <td className="px-3 py-2">{r.data_vencimento}</td>
-                <td className="px-3 py-2">{r.status}</td>
+              <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50/70">
+                <td className="px-3 py-2 font-medium text-slate-900">{r.descricao}</td>
+                <td className="px-3 py-2 capitalize text-slate-700">{r.tipo}</td>
+                <td className="px-3 py-2 font-medium text-slate-900">
+                  {formatCurrencyBRL(Number(r.valor))}
+                </td>
+                <td className="px-3 py-2 text-slate-700">{r.data_vencimento}</td>
+                <td className="px-3 py-2 capitalize text-slate-700">{r.status}</td>
               </tr>
             ))}
           </tbody>

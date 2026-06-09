@@ -81,7 +81,7 @@ export interface ImovelRow {
 export interface LeadRow {
   id: string
   empresa_id: string
-  imovel_id: string
+  imovel_id: string | null
   corretor_id: string | null
   name: string
   phone: string | null
@@ -219,6 +219,7 @@ export interface PropertyListFilters {
 
 export interface ImovelInsert {
   empresa_id: string
+  proprietario_id?: string | null
   captador_id?: string | null
   titulo: string
   descricao?: string | null

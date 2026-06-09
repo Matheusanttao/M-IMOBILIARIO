@@ -2,17 +2,32 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Edit, EyeOff, Play, Plus, Trash2 } from 'lucide-react'
+import { Edit, EyeOff, Play, Plus, Trash2, Building2, TrendingUp, Eye, AlertCircle } from 'lucide-react'
 import type { ImovelRow, ImovelStatus } from '@/types'
 import { deleteImovel, fetchMyImoveis, updateImovel } from '@/services/imoveis'
 import { formatCurrencyBRL, getCoverImage } from '@/lib/utils'
 import { IMOVEL_STATUS_LABELS, PROPERTY_TYPE_LABELS, PURPOSE_LABELS } from '@/lib/constants'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import { Modal } from '@/components/ui/Modal'
 import { Spinner } from '@/components/ui/Spinner'
 
 const ACTIVE_STATUSES: ImovelStatus[] = ['disponivel', 'reservado']
+
+const STATUS_STYLES: Record<ImovelStatus, string> = {
+  disponivel: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+  reservado:  'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
+  vendido:    'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
+  alugado:    'bg-violet-50 text-violet-700 ring-1 ring-violet-200',
+  oculto:     'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+}
+
+const STATUS_DOT: Record<ImovelStatus, string> = {
+  disponivel: 'bg-emerald-400',
+  reservado:  'bg-blue-400',
+  vendido:    'bg-slate-400',
+  alugado:    'bg-violet-400',
+  oculto:     'bg-amber-400',
+}
 
 export default function AdminImoveisPage() {
   const [items, setItems] = useState<ImovelRow[]>([])
@@ -35,23 +50,19 @@ export default function AdminImoveisPage() {
     }
   }
 
-  useEffect(() => {
-    void load()
-  }, [])
+  useEffect(() => { void load() }, [])
 
   const filtered = useMemo(() => {
     if (statusFilter === 'todos') return items
     return items.filter((item) => item.status === statusFilter)
   }, [items, statusFilter])
 
-  const counts = useMemo(
-    () => ({
-      total: items.length,
-      ativos: items.filter((item) => ACTIVE_STATUSES.includes(item.status)).length,
-      pausados: items.filter((item) => item.status === 'oculto').length,
-    }),
-    [items],
-  )
+  const counts = useMemo(() => ({
+    total:    items.length,
+    ativos:   items.filter((item) => ACTIVE_STATUSES.includes(item.status)).length,
+    ocultos:  items.filter((item) => item.status === 'oculto').length,
+    vendidos: items.filter((item) => item.status === 'vendido' || item.status === 'alugado').length,
+  }), [items])
 
   async function togglePause(item: ImovelRow) {
     const nextStatus: ImovelStatus = item.status === 'oculto' ? 'disponivel' : 'oculto'
@@ -82,124 +93,184 @@ export default function AdminImoveisPage() {
     }
   }
 
+  const filterOptions: { value: 'todos' | ImovelStatus; label: string; count?: number }[] = [
+    { value: 'todos', label: 'Todos', count: counts.total },
+    ...( Object.entries(IMOVEL_STATUS_LABELS) as [ImovelStatus, string][]).map(([value, label]) => ({
+      value,
+      label,
+      count: items.filter((i) => i.status === value).length,
+    })),
+  ]
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-3xl font-bold text-primary">Anúncios</h1>
-          <p className="mt-1 text-muted">
-            Liste, edite, pause, publique ou exclua os anúncios de imóveis.
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-accent">Catálogo</p>
+          <h1 className="mt-1 font-display text-2xl font-bold text-slate-800 sm:text-3xl">Imóveis</h1>
         </div>
         <Link href="/admin/imoveis/novo">
-          <Button type="button" className="gap-2">
+          <Button type="button" className="gap-2 shadow-sm">
             <Plus className="size-4" />
-            Novo anúncio
+            Novo imóvel
           </Button>
         </Link>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <p className="text-sm text-muted">Total</p>
-          <p className="mt-1 font-display text-2xl font-bold text-primary">{counts.total}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <p className="text-sm text-muted">Ativos</p>
-          <p className="mt-1 font-display text-2xl font-bold text-emerald-700">{counts.ativos}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <p className="text-sm text-muted">Pausados</p>
-          <p className="mt-1 font-display text-2xl font-bold text-slate-600">{counts.pausados}</p>
-        </div>
+      {/* Metric cards */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            label: 'Total cadastrado',
+            value: counts.total,
+            icon: Building2,
+            color: 'text-primary',
+            bg: 'bg-primary/8',
+          },
+          {
+            label: 'Disponíveis / Reservados',
+            value: counts.ativos,
+            icon: TrendingUp,
+            color: 'text-emerald-600',
+            bg: 'bg-emerald-50',
+          },
+          {
+            label: 'Vendidos / Alugados',
+            value: counts.vendidos,
+            icon: Eye,
+            color: 'text-violet-600',
+            bg: 'bg-violet-50',
+          },
+          {
+            label: 'Ocultos',
+            value: counts.ocultos,
+            icon: AlertCircle,
+            color: 'text-amber-600',
+            bg: 'bg-amber-50',
+          },
+        ].map((card) => (
+          <div
+            key={card.label}
+            className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+          >
+            <div className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${card.bg}`}>
+              <card.icon className={`size-5 ${card.color}`} />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">{card.label}</p>
+              <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {[
-          { value: 'todos', label: 'Todos' },
-          ...Object.entries(IMOVEL_STATUS_LABELS).map(([value, label]) => ({ value, label })),
-        ].map((option) => (
+      {/* Filter pills */}
+      <div className="flex flex-wrap gap-1.5">
+        {filterOptions.map((opt) => (
           <button
-            key={option.value}
+            key={opt.value}
             type="button"
-            onClick={() => setStatusFilter(option.value as 'todos' | ImovelStatus)}
-            className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-              statusFilter === option.value
-                ? 'border-primary bg-primary text-white'
-                : 'border-slate-200 bg-white text-slate-600 hover:border-accent hover:text-primary'
+            onClick={() => setStatusFilter(opt.value)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all ${
+              statusFilter === opt.value
+                ? 'border-primary bg-primary text-white shadow-sm'
+                : 'border-slate-200 bg-white text-slate-600 hover:border-primary/40 hover:text-primary'
             }`}
           >
-            {option.label}
+            {opt.label}
+            {opt.count !== undefined && (
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
+                statusFilter === opt.value ? 'bg-white/20' : 'bg-slate-100'
+              }`}>
+                {opt.count}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      {error ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <AlertCircle className="size-4 shrink-0" />
           {error}
-        </p>
-      ) : null}
+        </div>
+      )}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-md">
+      {/* Table */}
+      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
         {loading ? (
-          <div className="flex justify-center p-12">
+          <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted">
             <Spinner size="lg" />
+            <p className="text-sm">Carregando imóveis…</p>
           </div>
         ) : filtered.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-sm">
+            <table className="w-full min-w-[860px] text-left">
               <thead>
-                <tr className="border-b bg-slate-50 text-xs uppercase text-muted">
-                  <th className="px-4 py-3">Anúncio</th>
-                  <th className="px-4 py-3">Tipo</th>
-                  <th className="px-4 py-3">Finalidade</th>
-                  <th className="px-4 py-3">Preço</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Ações</th>
+                <tr className="border-b border-slate-100 bg-slate-50/80">
+                  <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    Imóvel
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    Tipo / Finalidade
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    Preço
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    Ações
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-50">
                 {filtered.map((item) => {
                   const cover = getCoverImage(item.imovel_imagens)
                   const paused = item.status === 'oculto'
                   return (
-                    <tr key={item.id}>
+                    <tr key={item.id} className="group transition-colors hover:bg-slate-50/60">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          {cover ? (
-                            <img
-                              src={cover}
-                              alt=""
-                              className="size-14 rounded-xl object-cover"
-                            />
-                          ) : (
-                            <div className="flex size-14 items-center justify-center rounded-xl bg-slate-100 text-xs text-muted">
-                              Sem foto
-                            </div>
-                          )}
+                          <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-slate-100">
+                            {cover ? (
+                              <img src={cover} alt="" className="size-full object-cover" />
+                            ) : (
+                              <div className="flex size-full items-center justify-center bg-slate-100 text-slate-300">
+                                <Building2 className="size-5" />
+                              </div>
+                            )}
+                          </div>
                           <div className="min-w-0">
-                            <p className="truncate font-medium text-slate-900">{item.titulo}</p>
-                            <p className="truncate text-xs text-muted">
+                            <p className="truncate text-sm font-semibold text-slate-800">{item.titulo}</p>
+                            <p className="truncate text-xs text-slate-400">
                               {item.bairro}, {item.cidade}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-slate-700">{PROPERTY_TYPE_LABELS[item.tipo]}</td>
-                      <td className="px-4 py-3 text-slate-700">{PURPOSE_LABELS[item.finalidade]}</td>
-                      <td className="px-4 py-3 font-medium text-primary">
-                        {formatCurrencyBRL(Number(item.preco))}
+                      <td className="px-4 py-3">
+                        <p className="text-sm text-slate-700">{PROPERTY_TYPE_LABELS[item.tipo]}</p>
+                        <p className="text-xs text-slate-400">{PURPOSE_LABELS[item.finalidade]}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant={paused ? 'muted' : 'success'}>
+                        <p className="text-sm font-semibold text-primary">
+                          {formatCurrencyBRL(Number(item.preco))}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[item.status]}`}>
+                          <span className={`size-1.5 rounded-full ${STATUS_DOT[item.status]}`} />
                           {IMOVEL_STATUS_LABELS[item.status]}
-                        </Badge>
+                        </span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           <Link href={`/admin/imoveis/${item.id}`}>
-                            <Button type="button" variant="secondary" size="sm">
-                              <Edit className="size-4" />
+                            <Button type="button" variant="secondary" size="sm" className="gap-1.5">
+                              <Edit className="size-3.5" />
                               Editar
                             </Button>
                           </Link>
@@ -209,19 +280,19 @@ export default function AdminImoveisPage() {
                             size="sm"
                             loading={busyId === item.id}
                             onClick={() => void togglePause(item)}
+                            className="gap-1.5"
                           >
-                            {paused ? <Play className="size-4" /> : <EyeOff className="size-4" />}
+                            {paused ? <Play className="size-3.5" /> : <EyeOff className="size-3.5" />}
                             {paused ? 'Ativar' : 'Pausar'}
                           </Button>
-                          <Button
+                          <button
                             type="button"
-                            variant="danger"
-                            size="sm"
+                            title="Excluir"
                             onClick={() => setDeleteTarget(item)}
+                            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                           >
                             <Trash2 className="size-4" />
-                            Excluir
-                          </Button>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -231,25 +302,41 @@ export default function AdminImoveisPage() {
             </table>
           </div>
         ) : (
-          <div className="p-10 text-center">
-            <p className="text-muted">Nenhum anúncio encontrado.</p>
-            <Link href="/admin/imoveis/novo" className="mt-4 inline-flex">
-              <Button type="button">Cadastrar primeiro anúncio</Button>
-            </Link>
+          <div className="flex flex-col items-center justify-center gap-4 py-20">
+            <div className="flex size-16 items-center justify-center rounded-2xl bg-slate-100">
+              <Building2 className="size-8 text-slate-300" />
+            </div>
+            <div className="text-center">
+              <p className="font-semibold text-slate-700">Nenhum imóvel encontrado</p>
+              <p className="mt-1 text-sm text-slate-400">
+                {statusFilter === 'todos'
+                  ? 'Comece cadastrando seu primeiro imóvel.'
+                  : 'Nenhum imóvel com esse status.'}
+              </p>
+            </div>
+            {statusFilter === 'todos' && (
+              <Link href="/admin/imoveis/novo">
+                <Button type="button">
+                  <Plus className="size-4" />
+                  Cadastrar imóvel
+                </Button>
+              </Link>
+            )}
           </div>
         )}
       </div>
 
-      <Modal
-        open={Boolean(deleteTarget)}
-        onClose={() => setDeleteTarget(null)}
-        title="Excluir anúncio"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-slate-600">
-            Tem certeza que deseja excluir o anúncio{' '}
-            <strong>{deleteTarget?.titulo}</strong>? Essa ação não poderá ser desfeita.
-          </p>
+      {/* Delete modal */}
+      <Modal open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} title="Excluir imóvel">
+        <div className="space-y-5">
+          <div className="flex items-start gap-3 rounded-xl bg-red-50 p-4">
+            <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-500" />
+            <p className="text-sm text-slate-700">
+              Tem certeza que deseja excluir{' '}
+              <strong className="text-slate-900">{deleteTarget?.titulo}</strong>?{' '}
+              Essa ação não poderá ser desfeita.
+            </p>
+          </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="secondary" onClick={() => setDeleteTarget(null)}>
               Cancelar
@@ -260,7 +347,7 @@ export default function AdminImoveisPage() {
               loading={Boolean(deleteTarget && busyId === deleteTarget.id)}
               onClick={() => void confirmDelete()}
             >
-              Excluir
+              Sim, excluir
             </Button>
           </div>
         </div>

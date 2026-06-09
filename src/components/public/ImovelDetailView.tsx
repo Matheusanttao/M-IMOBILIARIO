@@ -18,11 +18,13 @@ import { PURPOSE_LABELS, PROPERTY_TYPE_LABELS } from '@/lib/constants'
 import { buildWhatsAppUrl, formatCurrencyBRL } from '@/lib/utils'
 import { PropertyGallery } from '@/components/property/PropertyGallery'
 import { LeadForm } from '@/components/forms/LeadForm'
+import { MapaImoveis } from '@/components/mapa/MapaImoveis'
 import { Badge } from '@/components/ui/Badge'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { useTenant } from '@/contexts/TenantContext'
+import { addFavorite } from '@/services/favoritos'
 
 const envWa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? ''
 
@@ -34,6 +36,7 @@ export function ImovelDetailView() {
 
   const wa = tenantWa?.replace(/\D/g, '') || envWa.replace(/\D/g, '')
   const [pageUrl, setPageUrl] = useState('')
+  const [favoriteStatus, setFavoriteStatus] = useState<string | null>(null)
 
   useEffect(() => {
     setPageUrl(typeof window !== 'undefined' ? window.location.href : '')
@@ -100,14 +103,13 @@ export function ImovelDetailView() {
   const waText = `Olá! Tenho interesse no imóvel: ${titulo} (${pageUrl || ''})`
   const waUrl = wa ? buildWhatsAppUrl(wa, waText) : '#'
 
-  function addFavorito() {
-    const key = 'mimob_fav_ids'
-    const raw = localStorage.getItem(key)
-    const ids: string[] = raw ? JSON.parse(raw) : []
-    if (!ids.includes(imovelId)) {
-      ids.push(imovelId)
-      localStorage.setItem(key, JSON.stringify(ids))
-    }
+  async function addFavorito() {
+    const source = await addFavorite(imovelId)
+    setFavoriteStatus(
+      source === 'database'
+        ? 'Favorito salvo na sua conta.'
+        : 'Favorito salvo neste navegador.',
+    )
   }
 
   function shareNative() {
@@ -201,6 +203,9 @@ export function ImovelDetailView() {
                 Comparador
               </Link>
             </div>
+            {favoriteStatus ? (
+              <p className="mt-3 text-sm text-white/55">{favoriteStatus}</p>
+            ) : null}
 
             {pageUrl ? (
               <div className="mt-6 flex items-center gap-4 rounded-2xl border border-white/10 bg-card p-4">
@@ -211,9 +216,26 @@ export function ImovelDetailView() {
               </div>
             ) : null}
 
-            <div className="mt-10 rounded-2xl border border-dashed border-white/15 bg-white/[0.03] p-6 text-center text-sm text-white/55">
-              <Tag className="mx-auto mb-2 size-6 text-accent" />
-              Localização aproximada: {imovel.cidade}, {imovel.bairro}.
+            <div className="mt-10">
+              <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-semibold text-white">
+                <Tag className="size-5 text-accent" />
+                Localização
+              </h2>
+              <MapaImoveis
+                imoveis={[
+                  {
+                    id: imovel.id,
+                    titulo: imovel.titulo,
+                    latitude: imovel.latitude,
+                    longitude: imovel.longitude,
+                    slug: imovel.slug,
+                  },
+                ]}
+                height="320px"
+              />
+              <p className="mt-3 text-sm text-white/55">
+                Localização aproximada: {imovel.cidade}, {imovel.bairro}.
+              </p>
             </div>
           </div>
 
