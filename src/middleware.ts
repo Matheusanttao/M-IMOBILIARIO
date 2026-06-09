@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
-  const needsAuth = pathname.startsWith('/admin') || pathname.startsWith('/master')
+  const needsAuth = pathname.startsWith('/admin')
   if (!needsAuth) {
     return response
   }
@@ -52,27 +52,11 @@ export async function middleware(request: NextRequest) {
 
   const { data: perfil } = await supabase
     .from('usuarios')
-    .select('role, empresa_id')
+    .select('role')
     .eq('id', user.id)
     .maybeSingle()
 
   const role = perfil?.role as string | undefined
-  const empresaId = perfil?.empresa_id as string | undefined
-
-  if (pathname.startsWith('/admin') && role && role !== 'master' && empresaId) {
-    const { data: assinatura } = await supabase
-      .from('assinaturas')
-      .select('status')
-      .eq('empresa_id', empresaId)
-      .maybeSingle()
-    if (assinatura?.status === 'inadimplente' && !pathname.startsWith('/admin/configuracoes')) {
-      return NextResponse.redirect(new URL('/admin/configuracoes?inadimplente=1', request.url))
-    }
-  }
-
-  if (pathname.startsWith('/master') && role !== 'master') {
-    return NextResponse.redirect(new URL('/admin', request.url))
-  }
 
   if (pathname.startsWith('/admin') && !role) {
     const login = new URL('/admin/login', request.url)

@@ -1,7 +1,6 @@
 'use client'
 
 import { Suspense, useEffect, useState, useCallback, type ChangeEvent } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -75,7 +74,6 @@ function normalizeFinanciamentos(
 
 function AdminConfigPageInner() {
   const supabase = createClient()
-  const searchParams = useSearchParams()
   const [empresaId, setEmpresaId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [feedback, setFeedback] = useState<{
@@ -256,12 +254,6 @@ function AdminConfigPageInner() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      {searchParams?.get('inadimplente') ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Sua assinatura está <strong>inadimplente</strong>. Entre em contato
-          com o atendimento para regularizar o acesso ao painel completo.
-        </div>
-      ) : null}
       <div>
         <h1 className="font-display text-3xl font-bold text-primary">
           Configurações
