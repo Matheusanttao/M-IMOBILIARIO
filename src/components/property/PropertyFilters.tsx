@@ -25,13 +25,31 @@ export function PropertyFilters({
   onApply,
   mobileOpen,
   onMobileClose,
+  cities = [],
+  neighborhoods = [],
 }: {
   value: PropertyListFilters
   onChange: (next: PropertyListFilters) => void
   onApply?: () => void
   mobileOpen?: boolean
   onMobileClose?: () => void
+  cities?: string[]
+  neighborhoods?: { city: string; neighborhood: string }[]
 }) {
+  const cityOptions = [
+    { value: '', label: 'Todas as cidades' },
+    ...cities.map((city) => ({ value: city, label: city })),
+  ]
+  const neighborhoodOptions = [
+    { value: '', label: 'Todos os bairros/regiões' },
+    ...neighborhoods
+      .filter((item) => !value.city || item.city === value.city)
+      .map((item) => ({
+        value: item.neighborhood,
+        label: value.city ? item.neighborhood : `${item.neighborhood} - ${item.city}`,
+      })),
+  ]
+
   const fields = (
     <div className="space-y-4 [&_input]:border-white/10 [&_input]:bg-white/[0.04] [&_input]:text-white [&_input]:placeholder:text-white/35 [&_label]:!text-white/70 [&_option]:bg-card [&_option]:text-white [&_select]:border-white/10 [&_select]:bg-white/[0.04] [&_select]:text-white">
       <Select
@@ -56,17 +74,23 @@ export function PropertyFilters({
           })
         }
       />
-      <Input
+      <Select
         label="Cidade"
+        options={cityOptions}
         value={value.city ?? ''}
-        onChange={(e) => onChange({ ...value, city: e.target.value })}
-        placeholder="Ex: São Paulo"
+        onChange={(e) =>
+          onChange({
+            ...value,
+            city: e.target.value,
+            neighborhood: '',
+          })
+        }
       />
-      <Input
-        label="Bairro"
+      <Select
+        label="Bairro ou região"
+        options={neighborhoodOptions}
         value={value.neighborhood ?? ''}
         onChange={(e) => onChange({ ...value, neighborhood: e.target.value })}
-        placeholder="Ex: Jardins"
       />
       <div className="grid grid-cols-2 gap-3">
         <Input

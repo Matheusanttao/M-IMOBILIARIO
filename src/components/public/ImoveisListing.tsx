@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { SlidersHorizontal } from 'lucide-react'
 import type { PropertyListFilters, PropertyPurpose, PropertySort, PropertyType } from '@/types'
-import { useImoveis, useTotalPages } from '@/hooks/useImoveis'
+import { useImoveis, usePropertyFilterOptions, useTotalPages } from '@/hooks/useImoveis'
 import { PropertyGrid } from '@/components/property/PropertyGrid'
 import { PropertyFilters } from '@/components/property/PropertyFilters'
 import { Select } from '@/components/ui/Select'
@@ -94,6 +94,7 @@ export function ImoveisListing() {
     filters,
     sort,
   )
+  const filterOptions = usePropertyFilterOptions(empresaId)
   const totalPages = useTotalPages(total)
 
   const sortOptions = useMemo(
@@ -176,6 +177,8 @@ export function ImoveisListing() {
             }}
             mobileOpen={mobileFilters}
             onMobileClose={() => setMobileFilters(false)}
+            cities={filterOptions.cities}
+            neighborhoods={filterOptions.neighborhoods}
           />
 
           <div>

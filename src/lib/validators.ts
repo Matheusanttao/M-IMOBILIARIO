@@ -18,9 +18,26 @@ export const propertyFormSchema = z.object({
   tipo: z.enum(['casa', 'apartamento', 'terreno', 'sala_comercial']),
   finalidade: z.enum(['venda', 'aluguel']),
   preco: z.coerce.number().positive('Preço deve ser maior que zero'),
+  cep: z.string().optional(),
   cidade: z.string().min(2, 'Cidade obrigatória'),
   bairro: z.string().min(2, 'Bairro obrigatório'),
   endereco: z.string().optional(),
+  latitude: z
+    .preprocess(
+      (value) => (value === '' || value == null ? null : value),
+      z.coerce.number().min(-90, 'Latitude inválida').max(90, 'Latitude inválida').nullable(),
+    )
+    .optional(),
+  longitude: z
+    .preprocess(
+      (value) => (value === '' || value == null ? null : value),
+      z.coerce
+        .number()
+        .min(-180, 'Longitude inválida')
+        .max(180, 'Longitude inválida')
+        .nullable(),
+    )
+    .optional(),
   quartos: z.coerce.number().int().min(0),
   suites: z.coerce.number().int().min(0),
   banheiros: z.coerce.number().int().min(0),

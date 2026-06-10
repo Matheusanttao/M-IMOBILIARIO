@@ -184,6 +184,7 @@ create table if not exists public.imoveis (
   tipo text not null check (tipo in ('casa', 'apartamento', 'terreno', 'sala_comercial')),
   finalidade text not null check (finalidade in ('venda', 'aluguel')),
   preco numeric(12, 2) not null check (preco >= 0),
+  cep text,
   cidade text not null,
   bairro text not null,
   endereco text,

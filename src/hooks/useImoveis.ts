@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { fetchPublicImoveis } from '@/services/imoveis'
+import { fetchPublicFilterOptions, fetchPublicImoveis } from '@/services/imoveis'
 import type { ImovelRow, PropertyListFilters, PropertySort } from '@/types'
 import { PAGE_SIZE } from '@/lib/constants'
 
@@ -72,4 +72,38 @@ export function useImoveis(
 
 export function useTotalPages(total: number) {
   return Math.max(1, Math.ceil(total / PAGE_SIZE))
+}
+
+export function usePropertyFilterOptions(empresaId: string) {
+  const [cities, setCities] = useState<string[]>([])
+  const [neighborhoods, setNeighborhoods] = useState<
+    { city: string; neighborhood: string }[]
+  >([])
+
+  useEffect(() => {
+    if (!empresaId) {
+      setCities([])
+      setNeighborhoods([])
+      return
+    }
+
+    let cancelled = false
+    fetchPublicFilterOptions(empresaId)
+      .then((options) => {
+        if (cancelled) return
+        setCities(options.cities)
+        setNeighborhoods(options.neighborhoods)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setCities([])
+        setNeighborhoods([])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [empresaId])
+
+  return { cities, neighborhoods }
 }

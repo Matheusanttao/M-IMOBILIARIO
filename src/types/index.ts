@@ -54,6 +54,7 @@ export interface ImovelRow {
   tipo: PropertyType
   finalidade: PropertyPurpose
   preco: number
+  cep: string | null
   cidade: string
   bairro: string
   endereco: string | null
@@ -226,6 +227,7 @@ export interface ImovelInsert {
   tipo: PropertyType
   finalidade: PropertyPurpose
   preco: number
+  cep?: string | null
   cidade: string
   bairro: string
   endereco?: string | null
@@ -237,6 +239,9 @@ export interface ImovelInsert {
   status: ImovelStatus
   destaque: boolean
   corretor_id?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  localizacao_aproximada?: boolean
 }
 
 export type ImovelUpdate = Partial<ImovelInsert> & { updated_at?: string }

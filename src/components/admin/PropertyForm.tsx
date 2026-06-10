@@ -61,6 +61,7 @@ export function PropertyForm() {
     getValues,
     reset,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema) as Resolver<PropertyFormValues>,
@@ -70,9 +71,12 @@ export function PropertyForm() {
       tipo: 'apartamento',
       finalidade: 'venda',
       preco: 0,
+      cep: '',
       cidade: '',
       bairro: '',
       endereco: '',
+      latitude: null,
+      longitude: null,
       quartos: 0,
       suites: 0,
       banheiros: 0,
@@ -86,6 +90,14 @@ export function PropertyForm() {
       proprietario_principal: true,
     },
   })
+  const cepValue = watch('cep') ?? ''
+  const hasCepForCoordinates = cepValue.replace(/\D/g, '').length >= 8
+
+  useEffect(() => {
+    if (hasCepForCoordinates) return
+    setValue('latitude', null, { shouldDirty: true })
+    setValue('longitude', null, { shouldDirty: true })
+  }, [hasCepForCoordinates, setValue])
 
   useEffect(() => {
     const supabase = createClient()
@@ -135,9 +147,12 @@ export function PropertyForm() {
           tipo: p.tipo,
           finalidade: p.finalidade,
           preco: p.preco,
+          cep: p.cep ?? '',
           cidade: p.cidade,
           bairro: p.bairro,
           endereco: p.endereco ?? '',
+          latitude: p.latitude,
+          longitude: p.longitude,
           quartos: p.quartos,
           suites: p.suites,
           banheiros: p.banheiros,
@@ -264,9 +279,15 @@ export function PropertyForm() {
         tipo: data.tipo,
         finalidade: data.finalidade,
         preco: data.preco,
+        cep: data.cep?.trim() || null,
         cidade: data.cidade,
         bairro: data.bairro,
         endereco: data.endereco || null,
+        latitude: data.cep?.trim() ? data.latitude ?? null : null,
+        longitude: data.cep?.trim() ? data.longitude ?? null : null,
+        localizacao_aproximada: Boolean(
+          data.cep?.trim() && data.latitude != null && data.longitude != null,
+        ),
         quartos: data.quartos,
         suites: data.suites,
         banheiros: data.banheiros,
@@ -470,11 +491,56 @@ export function PropertyForm() {
                   {...register('area')}
                   error={errors.area?.message}
                 />
+                <Input
+                  label="CEP"
+                  inputMode="numeric"
+                  placeholder="00000-000"
+                  {...register('cep')}
+                  error={errors.cep?.message}
+                />
                 <Input label="Cidade" {...register('cidade')} error={errors.cidade?.message} />
                 <Input label="Bairro" {...register('bairro')} error={errors.bairro?.message} />
-                <div className="sm:col-span-2 xl:col-span-4">
-                  <Input label="Endereço (opcional)" {...register('endereco')} />
+                <div className="sm:col-span-2 xl:col-span-2">
+                  <Input
+                    label="Endereço completo (opcional)"
+                    placeholder="Rua, número e complemento"
+                    {...register('endereco')}
+                  />
                 </div>
+                {hasCepForCoordinates ? (
+                  <div className="grid gap-4 rounded-xl border border-amber-100 bg-amber-50/70 p-4 sm:col-span-2 sm:grid-cols-2 xl:col-span-4">
+                    <div className="sm:col-span-2">
+                      <p className="text-sm font-medium text-amber-900">
+                        Coordenadas do endereço
+                      </p>
+                      <p className="mt-1 text-xs text-amber-800">
+                        Preencha latitude e longitude apenas quando tiver o CEP/endereço
+                        completo para localizar o imóvel no mapa.
+                      </p>
+                    </div>
+                    <Input
+                      label="Latitude"
+                      type="number"
+                      step="any"
+                      placeholder="-23.55052"
+                      {...register('latitude')}
+                      error={errors.latitude?.message}
+                    />
+                    <Input
+                      label="Longitude"
+                      type="number"
+                      step="any"
+                      placeholder="-46.633308"
+                      {...register('longitude')}
+                      error={errors.longitude?.message}
+                    />
+                  </div>
+                ) : (
+                  <p className="rounded-xl bg-surface/70 px-4 py-3 text-xs text-muted sm:col-span-2 xl:col-span-4">
+                    Informe o CEP para liberar latitude e longitude. Sem CEP, o imóvel
+                    não será enviado para o mapa por coordenadas.
+                  </p>
+                )}
               </div>
             </section>
 

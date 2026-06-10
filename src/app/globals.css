@@ -26,9 +26,21 @@
   }
 }
 
+.property-gallery .swiper-pagination-bullet {
+  width: 7px;
+  height: 7px;
+  background-color: rgba(255, 255, 255, 0.55);
+  opacity: 1;
+  transition: all 0.25s ease;
+}
 .property-gallery .swiper-pagination-bullet-active {
+  width: 22px;
+  border-radius: 9999px;
   background-color: var(--color-accent);
 }
-.property-gallery .swiper-pagination-bullet {
-  background-color: rgba(26, 54, 93, 0.35);
+
+.property-thumbs .swiper-slide-thumb-active > div {
+  opacity: 1;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }

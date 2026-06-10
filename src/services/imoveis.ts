@@ -122,6 +122,44 @@ export async function fetchFeaturedImoveis(
   return (recent as ImovelRow[]) ?? []
 }
 
+export async function fetchPublicFilterOptions(empresaId: string): Promise<{
+  cities: string[]
+  neighborhoods: { city: string; neighborhood: string }[]
+}> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('imoveis')
+    .select('cidade, bairro')
+    .eq('empresa_id', empresaId)
+    .eq('status', 'disponivel')
+    .order('cidade', { ascending: true })
+    .order('bairro', { ascending: true })
+
+  if (error) throw error
+
+  const rows = ((data as Pick<ImovelRow, 'cidade' | 'bairro'>[]) ?? []).filter(
+    (row) => row.cidade?.trim() && row.bairro?.trim(),
+  )
+  const cities = Array.from(new Set(rows.map((row) => row.cidade.trim()))).sort(
+    (a, b) => a.localeCompare(b, 'pt-BR'),
+  )
+  const neighborhoods = Array.from(
+    new Map(
+      rows.map((row) => {
+        const city = row.cidade.trim()
+        const neighborhood = row.bairro.trim()
+        return [`${city}::${neighborhood}`, { city, neighborhood }] as const
+      }),
+    ).values(),
+  ).sort(
+    (a, b) =>
+      a.city.localeCompare(b.city, 'pt-BR') ||
+      a.neighborhood.localeCompare(b.neighborhood, 'pt-BR'),
+  )
+
+  return { cities, neighborhoods }
+}
+
 export async function fetchImovelBySlug(
   empresaId: string,
   slug: string,
