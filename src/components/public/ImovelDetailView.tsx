@@ -38,7 +38,7 @@ export function ImovelDetailView() {
   const params = useParams<{ slug: string }>()
   const slug = params?.slug
   const { empresaId, whatsapp: tenantWa } = useTenant()
-  const { imovel, loading, error } = useImovel(empresaId, slug)
+  const { imovel, loading, error } = useImovel(slug)
 
   const wa = tenantWa?.replace(/\D/g, '') || envWa.replace(/\D/g, '')
   const [pageUrl, setPageUrl] = useState('')
@@ -110,6 +110,7 @@ export function ImovelDetailView() {
   const waText = `Olá! Tenho interesse no imóvel: ${titulo} (${pageUrl || ''})`
   const waUrl = wa ? buildWhatsAppUrl(wa, waText) : '#'
   const isAluguel = imovel.finalidade === 'aluguel'
+  const hasCoordinates = imovel.latitude != null && imovel.longitude != null
 
   const specs = [
     {
@@ -309,29 +310,31 @@ export function ImovelDetailView() {
               </p>
             ) : null}
 
-            <div className="mt-10">
-              <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-semibold text-white">
-                <MapPin className="size-5 text-accent" />
-                Localização
-              </h2>
-              <div className="overflow-hidden rounded-2xl border border-white/10">
-                <MapaImoveis
-                  imoveis={[
-                    {
-                      id: imovel.id,
-                      titulo: imovel.titulo,
-                      latitude: imovel.latitude,
-                      longitude: imovel.longitude,
-                      slug: imovel.slug,
-                    },
-                  ]}
-                  height="340px"
-                />
+            {hasCoordinates ? (
+              <div className="mt-10">
+                <h2 className="mb-3 flex items-center gap-2 font-display text-xl font-semibold text-white">
+                  <MapPin className="size-5 text-accent" />
+                  Localização
+                </h2>
+                <div className="overflow-hidden rounded-2xl border border-white/10">
+                  <MapaImoveis
+                    imoveis={[
+                      {
+                        id: imovel.id,
+                        titulo: imovel.titulo,
+                        latitude: imovel.latitude,
+                        longitude: imovel.longitude,
+                        slug: imovel.slug,
+                      },
+                    ]}
+                    height="340px"
+                  />
+                </div>
+                <p className="mt-3 text-sm text-white/55">
+                  Localização aproximada: {imovel.bairro}, {imovel.cidade}.
+                </p>
               </div>
-              <p className="mt-3 text-sm text-white/55">
-                Localização aproximada: {imovel.bairro}, {imovel.cidade}.
-              </p>
-            </div>
+            ) : null}
           </div>
 
           <div className="space-y-6">

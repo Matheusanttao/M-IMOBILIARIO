@@ -11,7 +11,6 @@ import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { PAGE_SIZE } from '@/lib/constants'
-import { useTenant } from '@/contexts/TenantContext'
 
 function parseFilters(searchParams: URLSearchParams): PropertyListFilters {
   const purpose = searchParams.get('purpose') as PropertyPurpose | null
@@ -62,7 +61,6 @@ function filtersToParams(f: PropertyListFilters): URLSearchParams {
 }
 
 export function ImoveisListing() {
-  const { empresaId } = useTenant()
   const searchParamsHook = useSearchParams()
   const searchParams = useMemo(
     () => searchParamsHook ?? new URLSearchParams(),
@@ -90,11 +88,10 @@ export function ImoveisListing() {
   )
 
   const { imoveis, total, loading, error, page, setPage } = useImoveis(
-    empresaId,
     filters,
     sort,
   )
-  const filterOptions = usePropertyFilterOptions(empresaId)
+  const filterOptions = usePropertyFilterOptions()
   const totalPages = useTotalPages(total)
 
   const sortOptions = useMemo(
@@ -105,29 +102,6 @@ export function ImoveisListing() {
     ],
     [],
   )
-
-  if (!empresaId) {
-    return (
-      <div className="min-h-screen bg-background py-8 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-accent">
-              Catálogo
-            </p>
-            <h1 className="mt-3 font-display text-3xl font-bold text-white sm:text-4xl">
-              Imóveis
-            </h1>
-            <p className="mt-2 text-white/60">
-              Nosso catálogo estará disponível em breve.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center text-white/60">
-            Nenhum imóvel disponível no momento.
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-background py-8 sm:py-12">

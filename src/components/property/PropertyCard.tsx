@@ -4,8 +4,10 @@ import Link from 'next/link'
 import { Bath, Bed, Car, Heart, MapPin, Maximize2 } from 'lucide-react'
 import type { ImovelRow } from '@/types'
 import { PROPERTY_TYPE_LABELS } from '@/lib/constants'
-import { cn, formatCurrencyBRL, getCoverImage } from '@/lib/utils'
+import { cn, formatCurrencyBRL } from '@/lib/utils'
 import { Badge } from '@/components/ui/Badge'
+
+const PLACEHOLDER_IMAGE = '/placeholder-imovel.jpg'
 
 export function PropertyCard({
   property,
@@ -15,7 +17,10 @@ export function PropertyCard({
   className?: string
 }) {
   const href = `/imoveis/${property.slug ?? property.id}`
-  const img = getCoverImage(property.imovel_imagens)
+  const img =
+    property.imovel_imagens?.find((image) => image.is_capa)?.url ||
+    property.imovel_imagens?.[0]?.url ||
+    PLACEHOLDER_IMAGE
   const label = property.finalidade === 'aluguel' ? 'OPORTUNIDADE' : 'DESTAQUE'
 
   return (
@@ -27,17 +32,16 @@ export function PropertyCard({
       )}
     >
       <div className="relative aspect-[16/10] overflow-hidden">
-        {img ? (
-          <img
-            src={img}
-            alt=""
-            className="size-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex size-full items-center justify-center bg-white/10 text-white/45">
-            Sem foto
-          </div>
-        )}
+        <img
+          src={img}
+          alt={property.titulo}
+          onError={(e) => {
+            const target = e.currentTarget
+            if (target.src.endsWith(PLACEHOLDER_IMAGE)) return
+            target.src = PLACEHOLDER_IMAGE
+          }}
+          className="size-full object-cover transition duration-500 group-hover:scale-105"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
         <Badge
           variant="accent"

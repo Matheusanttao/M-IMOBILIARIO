@@ -14,7 +14,6 @@ interface UseImoveisResult {
 }
 
 export function useImoveis(
-  empresaId: string,
   filters: PropertyListFilters,
   sort: PropertySort,
 ): UseImoveisResult {
@@ -32,17 +31,10 @@ export function useImoveis(
   }, [filters, sort])
 
   useEffect(() => {
-    if (!empresaId) {
-      setImoveis([])
-      setTotal(0)
-      setLoading(false)
-      setError('Imobiliária não encontrada.')
-      return
-    }
     let cancelled = false
     setLoading(true)
     setError(null)
-    fetchPublicImoveis({ empresaId, filters, sort, page })
+    fetchPublicImoveis({ filters, sort, page })
       .then(({ data, count }) => {
         if (cancelled) return
         setImoveis(data)
@@ -57,7 +49,7 @@ export function useImoveis(
     return () => {
       cancelled = true
     }
-  }, [empresaId, filters, sort, page, tick])
+  }, [filters, sort, page, tick])
 
   return {
     imoveis,
@@ -74,21 +66,15 @@ export function useTotalPages(total: number) {
   return Math.max(1, Math.ceil(total / PAGE_SIZE))
 }
 
-export function usePropertyFilterOptions(empresaId: string) {
+export function usePropertyFilterOptions() {
   const [cities, setCities] = useState<string[]>([])
   const [neighborhoods, setNeighborhoods] = useState<
     { city: string; neighborhood: string }[]
   >([])
 
   useEffect(() => {
-    if (!empresaId) {
-      setCities([])
-      setNeighborhoods([])
-      return
-    }
-
     let cancelled = false
-    fetchPublicFilterOptions(empresaId)
+    fetchPublicFilterOptions()
       .then((options) => {
         if (cancelled) return
         setCities(options.cities)
@@ -103,7 +89,7 @@ export function usePropertyFilterOptions(empresaId: string) {
     return () => {
       cancelled = true
     }
-  }, [empresaId])
+  }, [])
 
   return { cities, neighborhoods }
 }

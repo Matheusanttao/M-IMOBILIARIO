@@ -1,15 +1,17 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 import type { ImovelRow } from '@/types'
 import 'leaflet/dist/leaflet.css'
 
 type Props = {
   imoveis: Pick<ImovelRow, 'id' | 'titulo' | 'latitude' | 'longitude' | 'slug'>[]
   height?: string
+  emptyState?: ReactNode
 }
 
-export function MapaImoveis({ imoveis, height = '420px' }: Props) {
+export function MapaImoveis({ imoveis, height = '420px', emptyState = null }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const mapRef = useRef<import('leaflet').Map | null>(null)
 
@@ -58,11 +60,7 @@ export function MapaImoveis({ imoveis, height = '420px' }: Props) {
   const hasCoords = imoveis.some((i) => i.latitude != null && i.longitude != null)
 
   if (!hasCoords) {
-    return (
-      <div className="flex items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-sm text-muted">
-        Nenhum imóvel com latitude/longitude. Atualize o endereço ou coordenadas nos cadastros.
-      </div>
-    )
+    return emptyState
   }
 
   return <div ref={ref} className="w-full rounded-2xl border border-slate-200 shadow-md" style={{ height }} />

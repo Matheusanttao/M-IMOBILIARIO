@@ -18,9 +18,8 @@ const IMOVEL_SELECT = `
 function applyFilters(
   query: any,
   filters: PropertyListFilters,
-  empresaId: string,
 ) {
-  let q = query.eq('empresa_id', empresaId)
+  let q = query
   if (filters.purpose) q = q.eq('finalidade', filters.purpose)
   if (filters.city?.trim()) q = q.ilike('cidade', `%${filters.city.trim()}%`)
   if (filters.neighborhood?.trim()) {
@@ -70,7 +69,6 @@ export async function getEmpresaIdBySlug(slug: string): Promise<string | null> {
 }
 
 export async function fetchPublicImoveis(params: {
-  empresaId: string
   filters: PropertyListFilters
   sort: PropertySort
   page: number
@@ -84,7 +82,7 @@ export async function fetchPublicImoveis(params: {
     .select(IMOVEL_SELECT, { count: 'exact' })
     .eq('status', 'disponivel')
 
-  query = applyFilters(query, params.filters, params.empresaId)
+  query = applyFilters(query, params.filters)
   query = applySort(query, params.sort)
   query = query.range(from, to)
 
@@ -94,14 +92,12 @@ export async function fetchPublicImoveis(params: {
 }
 
 export async function fetchFeaturedImoveis(
-  empresaId: string,
   limit = 6,
 ): Promise<ImovelRow[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('imoveis')
     .select(IMOVEL_SELECT)
-    .eq('empresa_id', empresaId)
     .eq('status', 'disponivel')
     .eq('destaque', true)
     .order('created_at', { ascending: false })
@@ -113,7 +109,6 @@ export async function fetchFeaturedImoveis(
   const { data: recent, error: recentError } = await supabase
     .from('imoveis')
     .select(IMOVEL_SELECT)
-    .eq('empresa_id', empresaId)
     .eq('status', 'disponivel')
     .order('created_at', { ascending: false })
     .limit(limit)
@@ -122,7 +117,7 @@ export async function fetchFeaturedImoveis(
   return (recent as ImovelRow[]) ?? []
 }
 
-export async function fetchPublicFilterOptions(empresaId: string): Promise<{
+export async function fetchPublicFilterOptions(): Promise<{
   cities: string[]
   neighborhoods: { city: string; neighborhood: string }[]
 }> {
@@ -130,7 +125,6 @@ export async function fetchPublicFilterOptions(empresaId: string): Promise<{
   const { data, error } = await supabase
     .from('imoveis')
     .select('cidade, bairro')
-    .eq('empresa_id', empresaId)
     .eq('status', 'disponivel')
     .order('cidade', { ascending: true })
     .order('bairro', { ascending: true })
@@ -161,7 +155,6 @@ export async function fetchPublicFilterOptions(empresaId: string): Promise<{
 }
 
 export async function fetchImovelBySlug(
-  empresaId: string,
   slug: string,
   options?: { includeHidden?: boolean },
 ): Promise<ImovelRow | null> {
@@ -169,7 +162,6 @@ export async function fetchImovelBySlug(
   let query = supabase
     .from('imoveis')
     .select(IMOVEL_SELECT)
-    .eq('empresa_id', empresaId)
     .eq('slug', slug)
 
   if (!options?.includeHidden) {

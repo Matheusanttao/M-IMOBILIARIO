@@ -6,23 +6,15 @@ import { fetchFeaturedImoveis } from '@/services/imoveis'
 import type { ImovelRow } from '@/types'
 import { PropertyGrid } from '@/components/property/PropertyGrid'
 import { Spinner } from '@/components/ui/Spinner'
-import { useTenant } from '@/contexts/TenantContext'
 
 export function FeaturedProperties() {
-  const { empresaId } = useTenant()
   const [items, setItems] = useState<ImovelRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!empresaId) {
-      setItems([])
-      setLoading(false)
-      setError(null)
-      return
-    }
     let cancelled = false
-    fetchFeaturedImoveis(empresaId, 6)
+    fetchFeaturedImoveis(6)
       .then((data) => {
         if (!cancelled) setItems(data)
       })
@@ -35,7 +27,7 @@ export function FeaturedProperties() {
     return () => {
       cancelled = true
     }
-  }, [empresaId])
+  }, [])
 
   return (
     <section className="bg-background py-16 sm:py-24">

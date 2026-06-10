@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react'
 import { fetchImovelBySlug } from '@/services/imoveis'
 import type { ImovelRow } from '@/types'
 
-export function useImovel(empresaId: string, slug: string | undefined) {
+export function useImovel(slug: string | undefined) {
   const [imovel, setImovel] = useState<ImovelRow | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!empresaId || !slug) {
+    if (!slug) {
       setImovel(null)
       setLoading(false)
       setError('Imóvel não encontrado.')
@@ -17,7 +17,7 @@ export function useImovel(empresaId: string, slug: string | undefined) {
     let cancelled = false
     setLoading(true)
     setError(null)
-    fetchImovelBySlug(empresaId, slug)
+    fetchImovelBySlug(slug)
       .then((p) => {
         if (cancelled) return
         setImovel(p)
@@ -32,7 +32,7 @@ export function useImovel(empresaId: string, slug: string | undefined) {
     return () => {
       cancelled = true
     }
-  }, [empresaId, slug])
+  }, [slug])
 
   return { imovel, loading, error }
 }

@@ -4,20 +4,17 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { PropertyGrid } from '@/components/property/PropertyGrid'
 import type { ImovelRow } from '@/types'
-import { useTenant } from '@/contexts/TenantContext'
 import { fetchFavoriteProperties } from '@/services/favoritos'
 
 export default function FavoritosPage() {
-  const { empresaId } = useTenant()
   const [items, setItems] = useState<ImovelRow[]>([])
   const [source, setSource] = useState<'database' | 'local'>('local')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!empresaId) return
     let cancelled = false
     setLoading(true)
-    fetchFavoriteProperties(empresaId)
+    fetchFavoriteProperties()
       .then(({ items: favoriteItems, source: favoriteSource }) => {
         if (cancelled) return
         setItems(favoriteItems)
@@ -29,7 +26,7 @@ export default function FavoritosPage() {
     return () => {
       cancelled = true
     }
-  }, [empresaId])
+  }, [])
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16">

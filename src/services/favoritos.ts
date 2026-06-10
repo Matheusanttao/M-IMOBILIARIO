@@ -56,7 +56,7 @@ export async function addFavorite(imovelId: string): Promise<'database' | 'local
   return 'database'
 }
 
-export async function fetchFavoriteProperties(empresaId: string): Promise<{
+export async function fetchFavoriteProperties(): Promise<{
   items: ImovelRow[]
   source: 'database' | 'local'
 }> {
@@ -82,7 +82,7 @@ export async function fetchFavoriteProperties(empresaId: string): Promise<{
     if (!error) {
       const items = (data ?? [])
         .map((row) => row.imoveis as unknown as ImovelRow | null)
-        .filter((imovel): imovel is ImovelRow => Boolean(imovel && imovel.empresa_id === empresaId))
+        .filter((imovel): imovel is ImovelRow => Boolean(imovel))
       return { items, source: 'database' }
     }
   }
@@ -93,7 +93,6 @@ export async function fetchFavoriteProperties(empresaId: string): Promise<{
   const { data } = await supabase
     .from('imoveis')
     .select('*, imovel_imagens(*)')
-    .eq('empresa_id', empresaId)
     .in('id', ids)
 
   return { items: (data as ImovelRow[]) ?? [], source: 'local' }

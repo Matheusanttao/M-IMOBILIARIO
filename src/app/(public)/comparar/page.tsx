@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { PropertyGrid } from '@/components/property/PropertyGrid'
 import type { ImovelRow } from '@/types'
 import { createClient } from '@/lib/supabase/client'
-import { useTenant } from '@/contexts/TenantContext'
 
 const STORAGE_KEY = 'mimob_compare_ids'
 
@@ -24,21 +23,19 @@ function readStoredIds(): string[] {
 }
 
 export default function CompararPage() {
-  const { empresaId } = useTenant()
   const [items, setItems] = useState<ImovelRow[]>([])
 
   useEffect(() => {
-    if (!empresaId || typeof window === 'undefined') return
+    if (typeof window === 'undefined') return
     const ids = readStoredIds()
     if (!ids.length) return
     const supabase = createClient()
     supabase
       .from('imoveis')
       .select('*, imovel_imagens(*)')
-      .eq('empresa_id', empresaId)
       .in('id', ids.slice(0, 3))
       .then(({ data }) => setItems((data as ImovelRow[]) ?? []))
-  }, [empresaId])
+  }, [])
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16">

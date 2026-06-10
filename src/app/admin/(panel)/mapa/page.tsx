@@ -36,7 +36,15 @@ export default function AdminMapaPage() {
       <h1 className="font-display text-3xl font-bold text-primary">Mapa dos imóveis</h1>
       <p className="mt-1 text-muted">Pins com OpenStreetMap (coordenadas do cadastro).</p>
       <div className="mt-8">
-        <MapaImoveis imoveis={imoveis} height="520px" />
+        <MapaImoveis
+          imoveis={imoveis}
+          height="520px"
+          emptyState={
+            <div className="flex items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-sm text-muted">
+              Nenhum imóvel com latitude/longitude. Atualize o endereço ou coordenadas nos cadastros.
+            </div>
+          }
+        />
       </div>
       <p className="mt-4 text-sm text-muted">
         Edite latitude/longitude em{' '}
