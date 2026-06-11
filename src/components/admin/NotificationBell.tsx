@@ -14,12 +14,30 @@ export function NotificationBell() {
       data: { user },
     } = await supabase.auth.getUser()
     if (!user) return
-    const { count: c } = await supabase
+    const { data: perfil } = await supabase
+      .from('usuarios')
+      .select('empresa_id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    const { count: personalCount } = await supabase
       .from('notificacoes')
       .select('*', { count: 'exact', head: true })
       .eq('usuario_id', user.id)
       .eq('lida', false)
-    setCount(c ?? 0)
+
+    let broadcastCount = 0
+    if (perfil?.empresa_id) {
+      const { count: c } = await supabase
+        .from('notificacoes')
+        .select('*', { count: 'exact', head: true })
+        .is('usuario_id', null)
+        .eq('empresa_id', perfil.empresa_id)
+        .eq('lida', false)
+      broadcastCount = c ?? 0
+    }
+
+    setCount((personalCount ?? 0) + broadcastCount)
   }, [])
 
   useEffect(() => {

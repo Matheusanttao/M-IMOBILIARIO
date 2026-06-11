@@ -46,12 +46,12 @@ export function MobileMenu({
               <img
                 src={logoUrl}
                 alt={`Logo ${empresaNome}`}
-                width={100}
-                height={100}
-                className="size-[100px] rounded-2xl object-contain"
+                width={220}
+                height={96}
+                className="h-20 w-auto max-w-[220px] object-contain"
               />
             ) : (
-              <span className="flex size-[100px] items-center justify-center rounded-2xl border border-accent/45 font-display text-3xl font-bold leading-none text-accent">
+              <span className="flex size-20 items-center justify-center rounded-2xl border border-accent/45 font-display text-3xl font-bold leading-none text-accent">
                 {initials.slice(0, 2)}
               </span>
             )}

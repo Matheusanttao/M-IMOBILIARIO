@@ -35,18 +35,18 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-white/10 bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-28 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex min-h-32 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3 text-white">
             {logoUrl ? (
               <img
                 src={logoUrl}
                 alt={`Logo ${displayName}`}
-                width={100}
-                height={100}
-                className="size-[100px] rounded-2xl object-contain"
+                width={260}
+                height={110}
+                className="h-24 w-auto max-w-[260px] object-contain sm:h-28"
               />
             ) : (
-              <span className="flex size-[100px] items-center justify-center rounded-2xl border border-accent/45 font-display text-3xl font-bold leading-none text-accent">
+              <span className="flex size-24 items-center justify-center rounded-2xl border border-accent/45 font-display text-3xl font-bold leading-none text-accent sm:size-28">
                 {initials.slice(0, 2)}
               </span>
             )}

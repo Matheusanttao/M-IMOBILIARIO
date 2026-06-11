@@ -81,6 +81,7 @@ function AdminConfigPageInner() {
     message: string
   } | null>(null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingQuemSomosImage, setUploadingQuemSomosImage] = useState(false)
 
   const {
     register,
@@ -128,6 +129,7 @@ function AdminConfigPageInner() {
   const corPrimaria = watch('cor_primaria')
   const corSecundaria = watch('cor_secundaria')
   const logoUrl = watch('logo_url')
+  const quemSomosImagemUrl = watch('quem_somos_imagem_url')
 
   const loadEmpresa = useCallback(async () => {
     setLoading(true)
@@ -241,6 +243,44 @@ function AdminConfigPageInner() {
       })
     } finally {
       setUploadingLogo(false)
+    }
+  }
+
+  async function handleQuemSomosImageUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    if (!cloudinaryConfigured()) {
+      setFeedback({
+        type: 'error',
+        message: 'Configure Cloudinary no .env para enviar a imagem do Quem Somos.',
+      })
+      return
+    }
+
+    setUploadingQuemSomosImage(true)
+    setFeedback(null)
+    try {
+      const uploaded = await uploadImageToCloudinary(file)
+      setValue('quem_somos_imagem_url', uploaded.secure_url, {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+      setFeedback({
+        type: 'success',
+        message: 'Imagem enviada. Clique em Salvar Configurações para gravar.',
+      })
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Erro ao enviar a imagem do Quem Somos.',
+      })
+    } finally {
+      setUploadingQuemSomosImage(false)
     }
   }
 
@@ -457,6 +497,39 @@ function AdminConfigPageInner() {
               {...register('quem_somos_imagem_url')}
               error={errors.quem_somos_imagem_url?.message}
             />
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                {quemSomosImagemUrl ? (
+                  <img
+                    src={quemSomosImagemUrl}
+                    alt="Prévia do Quem Somos"
+                    className="h-28 w-full rounded-xl border border-slate-200 bg-white object-cover sm:w-40"
+                  />
+                ) : (
+                  <div className="flex h-28 w-full items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white text-sm text-muted sm:w-40">
+                    Sem imagem
+                  </div>
+                )}
+                <div className="flex-1">
+                  <label className="inline-flex cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90">
+                    {uploadingQuemSomosImage
+                      ? 'Enviando...'
+                      : 'Selecionar imagem do PC'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingQuemSomosImage}
+                      onChange={handleQuemSomosImageUpload}
+                    />
+                  </label>
+                  <p className="mt-2 text-sm text-muted">
+                    Você também pode colar uma URL acima. Ao selecionar do PC, a imagem é enviada
+                    e a URL é preenchida automaticamente.
+                  </p>
+                </div>
+              </div>
+            </div>
             <Textarea
               label="Texto da página"
               rows={7}

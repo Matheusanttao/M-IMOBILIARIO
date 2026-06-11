@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, type ChangeEvent } from 'react'
+import { useEffect, useState, type ChangeEvent, type SyntheticEvent } from 'react'
 import { useForm, Controller, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
-import { Sparkles, Upload, X } from 'lucide-react'
+import { BedDouble, CheckCircle2, Home, Images, MapPin, Upload, UserRound, X } from 'lucide-react'
 import {
   createImovel,
   fetchImovelByIdForAdmin,
@@ -31,6 +31,14 @@ const statusOptions = (
   Object.entries(IMOVEL_STATUS_LABELS) as [keyof typeof IMOVEL_STATUS_LABELS, string][]
 ).map(([value, label]) => ({ value, label }))
 
+const PLACEHOLDER_IMAGE = '/placeholder-imovel.jpg'
+
+function fallbackImage(e: SyntheticEvent<HTMLImageElement>) {
+  const target = e.currentTarget
+  if (target.src.endsWith(PLACEHOLDER_IMAGE)) return
+  target.src = PLACEHOLDER_IMAGE
+}
+
 interface CaptadorOption {
   id: string
   nome: string
@@ -52,13 +60,11 @@ export function PropertyForm() {
   const [captadores, setCaptadores] = useState<CaptadorOption[]>([])
   const [proprietarios, setProprietarios] = useState<ProprietarioRow[]>([])
   const [propertyEmpresaId, setPropertyEmpresaId] = useState<string | null>(null)
-  const [generatingDescription, setGeneratingDescription] = useState(false)
 
   const {
     register,
     handleSubmit,
     control,
-    getValues,
     reset,
     setValue,
     watch,
@@ -221,49 +227,6 @@ export function PropertyForm() {
     setExistingImages((prev) => prev.filter((x) => x.id !== img.id))
   }
 
-  async function generateDescription() {
-    const values = getValues()
-    if (!values.titulo.trim() || !values.cidade.trim() || !values.bairro.trim()) {
-      setServerError('Informe título, cidade e bairro antes de gerar a descrição com IA.')
-      return
-    }
-
-    setServerError(null)
-    setGeneratingDescription(true)
-    try {
-      const response = await fetch('/api/ai/descricao', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          titulo: values.titulo,
-          tipo: values.tipo,
-          finalidade: values.finalidade,
-          cidade: values.cidade,
-          bairro: values.bairro,
-          quartos: values.quartos,
-          banheiros: values.banheiros,
-          vagas: values.vagas,
-          area: values.area,
-        }),
-      })
-      const body = (await response.json().catch(() => ({}))) as {
-        descricao?: string
-        error?: string
-      }
-      if (!response.ok) {
-        throw new Error(body.error ?? 'Não foi possível gerar a descrição.')
-      }
-      if (!body.descricao?.trim()) {
-        throw new Error('A IA não retornou uma descrição válida.')
-      }
-      setValue('descricao', body.descricao, { shouldDirty: true, shouldValidate: true })
-    } catch (error) {
-      setServerError(error instanceof Error ? error.message : 'Erro ao gerar descrição.')
-    } finally {
-      setGeneratingDescription(false)
-    }
-  }
-
   async function onSubmit(data: PropertyFormValues) {
     setServerError(null)
     if (newFiles.length > 0 && !cloudinaryConfigured()) {
@@ -392,91 +355,142 @@ export function PropertyForm() {
     <div className="w-full">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4 [&_input]:py-2 [&_select]:py-2 [&_textarea]:py-2"
+        className="space-y-6 [&_input]:py-3 [&_select]:py-3 [&_textarea]:py-3"
       >
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-1">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
-                Cadastro
-              </p>
-              <h1 className="font-display text-2xl font-bold text-primary sm:text-3xl">
-                {isNew ? 'Novo imóvel' : 'Editar imóvel'}
-              </h1>
+        <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+          <div className="bg-gradient-to-br from-primary via-slate-900 to-slate-800 px-5 py-6 text-white sm:px-7 sm:py-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-accent">
+                  Cadastro de imóveis
+                </p>
+                <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">
+                  {isNew ? 'Novo imóvel' : 'Editar imóvel'}
+                </h1>
+                <p className="mt-2 text-sm leading-6 text-white/70">
+                  Organize as informações do anúncio, adicione fotos e revise os
+                  dados antes de publicar no catálogo.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="submit"
+                  variant="accent"
+                  size="lg"
+                  loading={isSubmitting}
+                >
+                  Salvar imóvel
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  onClick={() => router.push('/admin/imoveis')}
+                  className="border-white/20 bg-white/10 text-white hover:border-accent hover:bg-white/15"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-4 text-sm text-slate-500 sm:grid-cols-3 sm:px-7">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="size-4 text-accent" />
+              Status, valores e localização
+            </div>
+            <div className="flex items-center gap-2">
+              <Images className="size-4 text-accent" />
+              Fotos do anúncio
+            </div>
+            <div className="flex items-center gap-2">
+              <UserRound className="size-4 text-accent" />
+              Responsáveis e proprietário
             </div>
           </div>
         </div>
 
         {serverError ? (
-          <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
             {serverError}
           </p>
         ) : null}
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(340px,0.8fr)]">
-          <div className="space-y-4">
-            <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="font-display text-lg font-semibold text-primary">
-                    Dados principais
-                  </h2>
-                  <p className="text-xs text-muted">Informações exibidas no catálogo.</p>
-                </div>
-                <div className="w-40">
-                  <Select
-                    label="Status"
-                    options={statusOptions}
-                    {...register('status')}
-                    error={errors.status?.message}
-                  />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.85fr)]">
+          <div className="space-y-6">
+            <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <Home className="size-5" />
+                    </span>
+                    <div>
+                      <h2 className="font-display text-lg font-semibold text-primary">
+                        Dados principais
+                      </h2>
+                      <p className="text-xs text-muted">
+                        Informações que aparecem no catálogo.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="w-44">
+                    <Select
+                      label="Status"
+                      options={statusOptions}
+                      {...register('status')}
+                      error={errors.status?.message}
+                    />
+                  </div>
                 </div>
               </div>
-
-              <div className="grid gap-4 lg:grid-cols-3">
-                <div className="lg:col-span-2">
-                  <Input label="Título" {...register('titulo')} error={errors.titulo?.message} />
-                </div>
-                <Select
-                  label="Finalidade"
-                  options={PURPOSES}
-                  {...register('finalidade')}
-                  error={errors.finalidade?.message}
-                />
-                <Select
-                  label="Tipo"
-                  options={PROPERTY_TYPES}
-                  {...register('tipo')}
-                  error={errors.tipo?.message}
-                />
-                <div className="space-y-2 lg:col-span-2">
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => void generateDescription()}
-                      disabled={generatingDescription || isSubmitting}
-                      className="gap-2"
-                    >
-                      <Sparkles className="size-4" />
-                      {generatingDescription ? 'Gerando...' : 'Gerar com IA'}
-                    </Button>
+              <div className="p-5 sm:p-6">
+                <div className="grid gap-5 lg:grid-cols-3">
+                  <div className="lg:col-span-2">
+                    <Input label="Título" {...register('titulo')} error={errors.titulo?.message} />
                   </div>
-                  <Textarea
-                    label="Descrição"
-                    rows={3}
-                    className="min-h-[96px]"
-                    {...register('descricao')}
-                    error={errors.descricao?.message}
+                  <Select
+                    label="Finalidade"
+                    options={PURPOSES}
+                    {...register('finalidade')}
+                    error={errors.finalidade?.message}
                   />
+                  <Select
+                    label="Tipo"
+                    options={PROPERTY_TYPES}
+                    {...register('tipo')}
+                    error={errors.tipo?.message}
+                  />
+                  <div className="lg:col-span-2">
+                    <Textarea
+                      label="Descrição"
+                      rows={4}
+                      className="min-h-[132px]"
+                      {...register('descricao')}
+                      error={errors.descricao?.message}
+                    />
+                  </div>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
-              <h2 className="font-display text-lg font-semibold text-primary">Valores e localização</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+                    <MapPin className="size-5" />
+                  </span>
+                  <div>
+                    <h2 className="font-display text-lg font-semibold text-primary">
+                      Valores e localização
+                    </h2>
+                    <p className="text-xs text-muted">
+                      Preço, endereço e dados para o mapa do imóvel.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
                 <Input
                   label="Preço (R$)"
                   type="number"
@@ -536,7 +550,7 @@ export function PropertyForm() {
                     />
                   </div>
                 ) : (
-                  <p className="rounded-xl bg-surface/70 px-4 py-3 text-xs text-muted sm:col-span-2 xl:col-span-4">
+                  <p className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-muted sm:col-span-2 xl:col-span-4">
                     Informe o CEP para liberar latitude e longitude. Sem CEP, o imóvel
                     não será enviado para o mapa por coordenadas.
                   </p>
@@ -544,9 +558,23 @@ export function PropertyForm() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
-              <h2 className="font-display text-lg font-semibold text-primary">Características</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <BedDouble className="size-5" />
+                  </span>
+                  <div>
+                    <h2 className="font-display text-lg font-semibold text-primary">
+                      Características
+                    </h2>
+                    <p className="text-xs text-muted">
+                      Estrutura, cômodos e destaque do anúncio.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-5">
                 <Input
                   label="Quartos"
                   type="number"
@@ -571,7 +599,7 @@ export function PropertyForm() {
                   {...register('vagas')}
                   error={errors.vagas?.message}
                 />
-                <label className="flex min-h-[66px] cursor-pointer items-center gap-3 rounded-xl border border-slate-100 bg-surface/50 px-4 text-sm font-medium text-slate-700">
+                <label className="flex min-h-[74px] cursor-pointer items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-medium text-slate-700 transition hover:border-accent/40 hover:bg-accent/5">
                   <Controller
                     name="destaque"
                     control={control}
@@ -584,16 +612,30 @@ export function PropertyForm() {
                       />
                     )}
                   />
-                  Destaque
+                  Mostrar em destaque
                 </label>
               </div>
             </section>
           </div>
 
-          <aside className="space-y-4">
-            <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
-              <h2 className="font-display text-lg font-semibold text-primary">Responsáveis</h2>
-              <div className="mt-4 space-y-4">
+          <aside className="space-y-6 xl:sticky xl:top-24 xl:self-start">
+            <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <UserRound className="size-5" />
+                  </span>
+                  <div>
+                    <h2 className="font-display text-lg font-semibold text-primary">
+                      Responsáveis
+                    </h2>
+                    <p className="text-xs text-muted">
+                      Captador e proprietário vinculados.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-5 p-5">
                 <div className="space-y-2">
                   <Select
                     label="Captador"
@@ -633,7 +675,7 @@ export function PropertyForm() {
                     {...register('proprietario_percentual')}
                     error={errors.proprietario_percentual?.message}
                   />
-                  <label className="flex min-h-[66px] cursor-pointer items-center gap-3 rounded-xl border border-slate-100 bg-surface/50 px-4 text-sm font-medium text-slate-700">
+                  <label className="flex min-h-[74px] cursor-pointer items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-medium text-slate-700 transition hover:border-accent/40 hover:bg-accent/5">
                     <Controller
                       name="proprietario_principal"
                       control={control}
@@ -646,7 +688,7 @@ export function PropertyForm() {
                         />
                       )}
                     />
-                    Principal
+                    Proprietário principal
                   </label>
                 </div>
 
@@ -662,66 +704,85 @@ export function PropertyForm() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="font-display text-lg font-semibold text-primary">Fotos</h2>
-                  <p className="text-xs text-muted">{imageCount} imagem(ns) adicionada(s)</p>
+            <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+              <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+                    <Images className="size-5" />
+                  </span>
+                  <div>
+                    <h2 className="font-display text-lg font-semibold text-primary">Fotos</h2>
+                    <p className="text-xs text-muted">
+                      {imageCount} imagem(ns) adicionada(s)
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-surface/50 px-4 py-4 transition hover:border-accent">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-                  <Upload className="size-5" />
-                </span>
-                <span>
-                  <span className="block text-sm font-medium text-slate-700">Adicionar imagens</span>
-                  <span className="block text-xs text-muted">Clique ou selecione vários arquivos</span>
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={onPickFiles}
-                />
-              </label>
+              <div className="p-5">
+                <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center transition hover:border-accent hover:bg-accent/5">
+                  <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+                    <Upload className="size-6" />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold text-slate-700">
+                      Adicionar imagens
+                    </span>
+                    <span className="mt-1 block text-xs text-muted">
+                      Clique ou selecione vários arquivos
+                    </span>
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={onPickFiles}
+                  />
+                </label>
 
-              {!cloudinaryConfigured() ? (
-                <p className="mt-2 text-xs text-amber-700">
-                  Cloudinary não configurado para upload de arquivos.
-                </p>
-              ) : null}
-              {uploadProgress ? (
-                <p className="mt-2 text-sm text-muted">{uploadProgress}</p>
-              ) : null}
+                {!cloudinaryConfigured() ? (
+                  <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                    Cloudinary não configurado para upload de arquivos.
+                  </p>
+                ) : null}
+                {uploadProgress ? (
+                  <p className="mt-3 rounded-2xl bg-slate-50 px-3 py-2 text-sm text-muted">
+                    {uploadProgress}
+                  </p>
+                ) : null}
 
-              <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto] xl:grid-cols-1 2xl:grid-cols-[1fr_auto]">
-                <Input
-                  label="URL da imagem"
-                  type="url"
-                  placeholder="https://..."
-                  value={imageUrlInput}
-                  onChange={(e) => setImageUrlInput(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="self-end"
-                  onClick={addImageUrl}
-                >
-                  Inserir URL
-                </Button>
-              </div>
+                <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto] xl:grid-cols-1 2xl:grid-cols-[1fr_auto]">
+                  <Input
+                    label="URL da imagem"
+                    type="url"
+                    placeholder="https://..."
+                    value={imageUrlInput}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="self-end"
+                    onClick={addImageUrl}
+                  >
+                    Inserir URL
+                  </Button>
+                </div>
 
-              {imageCount ? (
-                <div className="mt-4 grid max-h-56 grid-cols-3 gap-2 overflow-y-auto pr-1">
+                {imageCount ? (
+                  <div className="mt-5 grid max-h-72 grid-cols-3 gap-2 overflow-y-auto pr-1">
                   {existingImages.map((img) => (
                     <div
                       key={img.id}
                       className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100"
                     >
-                      <img src={img.url} alt="" className="size-full object-cover" />
+                      <img
+                        src={img.url || PLACEHOLDER_IMAGE}
+                        alt=""
+                        onError={fallbackImage}
+                        className="size-full object-cover"
+                      />
                       <button
                         type="button"
                         className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100"
@@ -736,7 +797,12 @@ export function PropertyForm() {
                       key={`${url}-${i}`}
                       className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100"
                     >
-                      <img src={url} alt="" className="size-full object-cover" />
+                      <img
+                        src={url || PLACEHOLDER_IMAGE}
+                        alt=""
+                        onError={fallbackImage}
+                        className="size-full object-cover"
+                      />
                       <button
                         type="button"
                         className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100"
@@ -754,6 +820,7 @@ export function PropertyForm() {
                       <img
                         src={URL.createObjectURL(file)}
                         alt=""
+                        onError={fallbackImage}
                         className="size-full object-cover"
                       />
                       <button
@@ -765,30 +832,40 @@ export function PropertyForm() {
                       </button>
                     </div>
                   ))}
-                </div>
-              ) : null}
+                  </div>
+                ) : null}
+              </div>
             </section>
           </aside>
         </div>
 
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted">
-              Revise as informações antes de salvar o cadastro do imóvel.
-            </p>
+        <div className="sticky bottom-4 z-20 rounded-3xl border border-slate-100 bg-white/95 p-4 shadow-2xl shadow-slate-900/10 backdrop-blur">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+                <CheckCircle2 className="size-5" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">
+                  Pronto para salvar?
+                </p>
+                <p className="mt-0.5 text-xs text-muted">
+                  Revise os dados, fotos e responsáveis antes de publicar o anúncio.
+                </p>
+              </div>
+            </div>
             <div className="flex flex-wrap gap-2 sm:justify-end">
-              <Button type="submit" loading={isSubmitting}>
+              <Button type="submit" size="lg" loading={isSubmitting}>
                 Salvar imóvel
               </Button>
-              <Button type="button" variant="secondary" onClick={() => router.push('/admin/imoveis')}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                onClick={() => router.push('/admin/imoveis')}
+              >
                 Cancelar
               </Button>
-              <Link
-                href="/admin/imoveis"
-                className="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/5"
-              >
-                Voltar
-              </Link>
             </div>
           </div>
         </div>

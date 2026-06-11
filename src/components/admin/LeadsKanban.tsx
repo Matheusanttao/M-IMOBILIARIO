@@ -1,37 +1,31 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useLeads } from '@/hooks/useLeads'
 import { updateLeadStatus } from '@/services/leads'
 import type { LeadStatus } from '@/types'
-import { Button } from '@/components/ui/Button'
+import { Select } from '@/components/ui/Select'
 import { Spinner } from '@/components/ui/Spinner'
 import { formatDatePt } from '@/lib/utils'
 
-const columns: { id: LeadStatus; title: string }[] = [
-  { id: 'novo', title: 'Novo' },
-  { id: 'contato', title: 'Contato' },
-  { id: 'visita', title: 'Visita' },
-  { id: 'negociacao', title: 'Negociação' },
-  { id: 'contrato', title: 'Contrato' },
-  { id: 'convertido', title: 'Convertido' },
-  { id: 'perdido', title: 'Perdido' },
+const statusOptions: { value: LeadStatus; label: string }[] = [
+  { value: 'novo', label: 'Novo' },
+  { value: 'contato', label: 'Contato' },
+  { value: 'visita', label: 'Visita' },
+  { value: 'negociacao', label: 'Negociação' },
+  { value: 'contrato', label: 'Contrato' },
+  { value: 'convertido', label: 'Convertido' },
+  { value: 'perdido', label: 'Perdido' },
 ]
+
+const statusLabels = Object.fromEntries(
+  statusOptions.map((item) => [item.value, item.label]),
+) as Record<LeadStatus, string>
 
 export function LeadsKanban() {
   const { leads, loading, error, reload } = useLeads()
   const [busy, setBusy] = useState<string | null>(null)
-
-  const byColumn = useMemo(() => {
-    const map = new Map<LeadStatus, typeof leads>()
-    for (const c of columns) map.set(c.id, [])
-    for (const l of leads) {
-      const col = map.get(l.status) ?? map.get('negociacao')!
-      col.push(l)
-    }
-    return map
-  }, [leads])
 
   const move = useCallback(
     async (id: string, status: LeadStatus) => {
@@ -59,60 +53,94 @@ export function LeadsKanban() {
   }
 
   return (
-    <div className="overflow-x-auto pb-4">
-      <div className="flex min-w-[1600px] gap-3">
-        {columns.map((col) => (
-          <div
-            key={col.id}
-            className="w-52 shrink-0 rounded-2xl border border-slate-100 bg-white shadow-md"
-          >
-            <div className="border-b border-slate-100 px-3 py-2 font-semibold text-primary">
-              {col.title}
-            </div>
-            <div className="space-y-2 p-2">
-              {(byColumn.get(col.id) ?? []).map((l) => (
-                <div
-                  key={l.id}
-                  className="rounded-xl border border-slate-100 bg-surface/80 p-3 text-sm"
-                >
-                  <p className="font-medium text-slate-800">
-                    <Link href={`/admin/leads/${l.id}`} className="hover:text-primary hover:underline">
-                      {l.name}
-                    </Link>
-                  </p>
-                  <p className="text-xs text-muted">{formatDatePt(l.created_at)}</p>
-                  {l.imoveis?.titulo ? (
-                    <p className="mt-1 text-xs text-primary">
-                      <Link
-                        href={`/imoveis/${l.imoveis.slug ?? l.imoveis.id}`}
-                        className="underline"
-                      >
-                        {l.imoveis.titulo}
-                      </Link>
-                    </p>
-                  ) : null}
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {columns
-                      .filter((c) => c.id !== l.status)
-                      .map((c) => (
-                        <Button
-                          key={c.id}
-                          size="sm"
-                          variant="secondary"
-                          className="h-7 px-2 text-xs"
-                          disabled={busy === l.id}
-                          onClick={() => move(l.id, c.id)}
-                        >
-                          → {c.title}
-                        </Button>
-                      ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+      <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-3">
+        <p className="text-sm font-semibold text-slate-800">
+          {leads.length} lead(s) encontrado(s)
+        </p>
       </div>
+      {leads.length ? (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400">
+                <th className="px-4 py-3">Cliente</th>
+                <th className="px-4 py-3">Contato</th>
+                <th className="px-4 py-3">Imóvel</th>
+                <th className="px-4 py-3">Origem</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Recebido em</th>
+                <th className="px-4 py-3 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {leads.map((lead) => (
+                <tr key={lead.id} className="transition hover:bg-slate-50/70">
+                  <td className="px-4 py-3">
+                    <p className="font-semibold text-slate-800">{lead.name}</p>
+                    {lead.message ? (
+                      <p className="mt-1 max-w-xs truncate text-xs text-slate-400">
+                        {lead.message}
+                      </p>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">
+                    <p>{lead.phone || '-'}</p>
+                    {lead.email ? (
+                      <p className="mt-0.5 text-xs text-slate-400">{lead.email}</p>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-3">
+                    {lead.imoveis?.titulo ? (
+                      <Link
+                        href={`/imoveis/${lead.imoveis.slug ?? lead.imoveis.id}`}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        {lead.imoveis.titulo}
+                      </Link>
+                    ) : (
+                      <span className="text-slate-400">Sem imóvel</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                      {lead.origem || 'site'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Select
+                      aria-label={`Status de ${lead.name}`}
+                      value={lead.status}
+                      options={statusOptions}
+                      disabled={busy === lead.id}
+                      onChange={(event) =>
+                        void move(lead.id, event.target.value as LeadStatus)
+                      }
+                      className="min-w-44 py-1.5 text-xs"
+                    />
+                    <span className="sr-only">{statusLabels[lead.status]}</span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-500">
+                    {formatDatePt(lead.created_at)}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Link
+                      href={`/admin/leads/${lead.id}`}
+                      className="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-hover"
+                    >
+                      Ver detalhes
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="p-8 text-center text-sm text-muted">
+          Nenhum lead recebido ainda.
+        </div>
+      )}
     </div>
   )
 }

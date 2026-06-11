@@ -5,16 +5,38 @@ import { Building2, Mail, Phone } from 'lucide-react'
 import { useTenant } from '@/contexts/TenantContext'
 
 export function Footer() {
-  const { empresaNome, whatsapp, email, cidade, estado } = useTenant()
+  const { empresaNome, logoUrl, whatsapp, email, cidade, estado } = useTenant()
   const phoneDigits = whatsapp?.replace(/\D/g, '')
   const location = [cidade, estado].filter(Boolean).join(' — ')
+  const initials = empresaNome
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase() || 'I'
 
   return (
     <footer className="border-t border-white/10 bg-[#050d18] text-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-3">
           <div>
-            <p className="font-display text-2xl font-semibold uppercase tracking-[0.2em]">
+            <Link href="/" className="inline-flex items-center gap-4">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={`Logo ${empresaNome}`}
+                  width={240}
+                  height={100}
+                  className="h-20 w-auto max-w-[240px] object-contain"
+                />
+              ) : (
+                <span className="flex size-20 items-center justify-center rounded-2xl border border-accent/45 font-display text-3xl font-bold leading-none text-accent">
+                  {initials.slice(0, 2)}
+                </span>
+              )}
+            </Link>
+            <p className="mt-4 font-display text-xl font-semibold uppercase tracking-[0.18em]">
               {empresaNome}
             </p>
             <p className="mt-3 text-sm text-white/80">

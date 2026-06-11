@@ -166,8 +166,8 @@ export function ImovelDetailView() {
           <span className="truncate text-white/75">{imovel.titulo}</span>
         </nav>
 
-        <div className="grid gap-10 lg:grid-cols-[1fr_380px]">
-          <div>
+        <div className="grid min-w-0 gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="min-w-0">
             <PropertyGallery images={images} />
 
             <div className="mt-8 flex flex-wrap items-center gap-2">

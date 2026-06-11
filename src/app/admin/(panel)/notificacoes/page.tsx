@@ -24,13 +24,39 @@ export default function AdminNotificacoesPage() {
         data: { user },
       } = await supabase.auth.getUser()
       if (!user) return
-      const { data } = await supabase
+      const { data: perfil } = await supabase
+        .from('usuarios')
+        .select('empresa_id')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      const { data: personal } = await supabase
         .from('notificacoes')
         .select('id, titulo, mensagem, lida, link, created_at')
         .eq('usuario_id', user.id)
         .order('created_at', { ascending: false })
         .limit(100)
-      if (!cancelled) setItems((data as N[]) ?? [])
+
+      let broadcast: N[] = []
+      if (perfil?.empresa_id) {
+        const { data } = await supabase
+          .from('notificacoes')
+          .select('id, titulo, mensagem, lida, link, created_at')
+          .is('usuario_id', null)
+          .eq('empresa_id', perfil.empresa_id)
+          .order('created_at', { ascending: false })
+          .limit(100)
+        broadcast = (data as N[]) ?? []
+      }
+
+      const rows = [...((personal as N[]) ?? []), ...broadcast]
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        )
+        .slice(0, 100)
+
+      if (!cancelled) setItems(rows)
     }
     void load()
 

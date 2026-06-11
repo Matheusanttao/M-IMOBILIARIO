@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type SyntheticEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import type { Swiper as SwiperClass } from 'swiper'
@@ -13,6 +13,20 @@ import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import 'swiper/css/thumbs'
 import 'swiper/css/zoom'
+
+const PLACEHOLDER_IMAGE = '/placeholder-imovel.jpg'
+
+function safeImageUrl(url: string | null | undefined) {
+  const value = url?.trim()
+  if (!value) return PLACEHOLDER_IMAGE
+  return value
+}
+
+function fallbackImage(e: SyntheticEvent<HTMLImageElement>) {
+  const target = e.currentTarget
+  if (target.src.endsWith(PLACEHOLDER_IMAGE)) return
+  target.src = PLACEHOLDER_IMAGE
+}
 
 export function PropertyGallery({ images }: { images: ImovelImagemRow[] }) {
   const sorted = useMemo(() => {
@@ -37,7 +51,7 @@ export function PropertyGallery({ images }: { images: ImovelImagemRow[] }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-card shadow-2xl shadow-black/40">
         <Swiper
           modules={[Navigation, Pagination, Thumbs, Keyboard]}
@@ -60,8 +74,9 @@ export function PropertyGallery({ images }: { images: ImovelImagemRow[] }) {
                 aria-label="Ampliar imagem"
               >
                 <img
-                  src={img.url}
-                  alt=""
+                  src={safeImageUrl(img.url)}
+                  alt="Imagem do imóvel"
+                  onError={fallbackImage}
                   className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
               </button>
@@ -117,7 +132,12 @@ export function PropertyGallery({ images }: { images: ImovelImagemRow[] }) {
           {sorted.map((img) => (
             <SwiperSlide key={img.id} className="!h-auto">
               <div className="aspect-[4/3] cursor-pointer overflow-hidden rounded-xl border border-white/10 opacity-55 transition hover:opacity-90">
-                <img src={img.url} alt="" className="size-full object-cover" />
+                <img
+                  src={safeImageUrl(img.url)}
+                  alt="Miniatura do imóvel"
+                  onError={fallbackImage}
+                  className="size-full object-cover"
+                />
               </div>
             </SwiperSlide>
           ))}
@@ -192,8 +212,9 @@ function Lightbox({
             <SwiperSlide key={img.id} className="flex items-center justify-center">
               <div className="swiper-zoom-container flex size-full items-center justify-center p-4">
                 <img
-                  src={img.url}
-                  alt=""
+                  src={safeImageUrl(img.url)}
+                  alt="Imagem ampliada do imóvel"
+                  onError={fallbackImage}
                   className="max-h-full max-w-full object-contain"
                 />
               </div>

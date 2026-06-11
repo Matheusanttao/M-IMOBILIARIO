@@ -104,7 +104,8 @@ export async function fetchFeaturedImoveis(
     .limit(limit)
 
   if (error) throw error
-  if (data?.length) return data as ImovelRow[]
+  const featured = (data as ImovelRow[]) ?? []
+  if (featured.length >= limit) return featured
 
   const { data: recent, error: recentError } = await supabase
     .from('imoveis')
@@ -114,7 +115,11 @@ export async function fetchFeaturedImoveis(
     .limit(limit)
 
   if (recentError) throw recentError
-  return (recent as ImovelRow[]) ?? []
+  const byId = new Map<string, ImovelRow>()
+  featured.forEach((item) => byId.set(item.id, item))
+  ;((recent as ImovelRow[]) ?? []).forEach((item) => byId.set(item.id, item))
+
+  return Array.from(byId.values()).slice(0, limit)
 }
 
 export async function fetchPublicFilterOptions(): Promise<{
@@ -289,13 +294,17 @@ export async function replaceImovelImagens(
 
   if (!images.length) return
 
-  const rows = images.map((img) => ({
-    imovel_id: imovelId,
-    url: img.url,
-    public_id: img.public_id,
-    is_capa: img.is_capa,
-    ordem: img.ordem,
-  }))
+  const rows = images
+    .map((img) => ({
+      imovel_id: imovelId,
+      url: img.url.trim(),
+      public_id: img.public_id.trim(),
+      is_capa: img.is_capa,
+      ordem: img.ordem,
+    }))
+    .filter((img) => img.url)
+
+  if (!rows.length) return
 
   const { error: insErr } = await supabase.from('imovel_imagens').insert(rows)
   if (insErr) throw insErr

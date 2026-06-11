@@ -83,8 +83,10 @@ export function AdminSidebar() {
   async function signOut() {
     const supabase = createClient()
     window.sessionStorage.removeItem('admin_user_role')
-    await supabase.auth.signOut()
-    window.location.href = '/admin/login'
+    window.localStorage.removeItem('admin_user_role')
+    document.cookie = 'tenant_slug=; path=/; max-age=0; samesite=lax'
+    await supabase.auth.signOut({ scope: 'global' })
+    window.location.replace('/admin/logout')
   }
 
   return (
@@ -99,7 +101,7 @@ export function AdminSidebar() {
             M. Imobiliário
           </p>
           <p className="mt-0.5 text-[0.6rem] uppercase tracking-[0.3em] text-white/40">
-            Painel Admin
+            Seja bem-vindo
           </p>
         </div>
       </div>
