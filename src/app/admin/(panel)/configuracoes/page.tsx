@@ -293,8 +293,8 @@ function AdminConfigPageInner() {
   }
 
   return (
-    <div className="w-full space-y-8">
-      <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+    <div className="min-w-0 w-full max-w-none space-y-8">
+      <div className="w-full overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
         <div className="bg-gradient-to-br from-primary via-slate-900 to-slate-800 px-5 py-6 text-white sm:px-7 sm:py-7">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-accent">
             Painel do site
@@ -302,16 +302,16 @@ function AdminConfigPageInner() {
           <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">
             Configurações
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">
+          <p className="mt-2 text-sm leading-6 text-white/70">
             Ajuste os dados da imobiliária, identidade visual, páginas
             institucionais e links exibidos no site público.
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-none space-y-8">
         {/* Dados Principais */}
-        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <section className="w-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Dados Principais
           </h2>
@@ -357,7 +357,7 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Endereço */}
-        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <section className="w-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">Endereço</h2>
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <div className="sm:col-span-2 xl:col-span-2">
@@ -384,7 +384,7 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Visual */}
-        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <section className="w-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Identidade Visual
           </h2>
@@ -485,7 +485,7 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Quem Somos */}
-        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <section className="w-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Quem Somos
           </h2>
@@ -552,7 +552,7 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Política de Privacidade */}
-        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <section className="w-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Política de Privacidade
           </h2>
@@ -577,7 +577,7 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Links */}
-        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <section className="w-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Links do Site
           </h2>
@@ -636,7 +636,7 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Redes Sociais */}
-        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <section className="w-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Redes Sociais
           </h2>

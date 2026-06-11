@@ -359,7 +359,7 @@ export function PropertyForm() {
       >
         <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
           <div className="bg-gradient-to-br from-primary via-slate-900 to-slate-800 px-5 py-6 text-white sm:px-7 sm:py-7">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-5">
               <div className="max-w-2xl">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-accent">
                   Cadastro de imóveis
@@ -371,25 +371,6 @@ export function PropertyForm() {
                   Organize as informações do anúncio, adicione fotos e revise os
                   dados antes de publicar no catálogo.
                 </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="submit"
-                  variant="accent"
-                  size="lg"
-                  loading={isSubmitting}
-                >
-                  Salvar imóvel
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="lg"
-                  onClick={() => router.push('/admin/imoveis')}
-                  className="border-white/20 bg-white/10 text-white hover:border-accent hover:bg-white/15"
-                >
-                  Cancelar
-                </Button>
               </div>
             </div>
           </div>
@@ -420,7 +401,7 @@ export function PropertyForm() {
           <div className="space-y-6">
             <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
               <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
                   <div className="flex items-center gap-3">
                     <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       <Home className="size-5" />
@@ -434,34 +415,32 @@ export function PropertyForm() {
                       </p>
                     </div>
                   </div>
-                  <div className="w-44">
-                    <Select
-                      label="Status"
-                      options={statusOptions}
-                      {...register('status')}
-                      error={errors.status?.message}
-                    />
-                  </div>
                 </div>
               </div>
               <div className="p-5 sm:p-6">
-                <div className="grid gap-5 lg:grid-cols-3">
+                <div className="grid gap-5 lg:grid-cols-4">
                   <div className="lg:col-span-2">
                     <Input label="Título" {...register('titulo')} error={errors.titulo?.message} />
                   </div>
-                  <Select
-                    label="Finalidade"
-                    options={PURPOSES}
-                    {...register('finalidade')}
-                    error={errors.finalidade?.message}
-                  />
                   <Select
                     label="Tipo"
                     options={PROPERTY_TYPES}
                     {...register('tipo')}
                     error={errors.tipo?.message}
                   />
-                  <div className="lg:col-span-2">
+                  <Select
+                    label="Status"
+                    options={statusOptions}
+                    {...register('status')}
+                    error={errors.status?.message}
+                  />
+                  <Select
+                    label="Finalidade"
+                    options={PURPOSES}
+                    {...register('finalidade')}
+                    error={errors.finalidade?.message}
+                  />
+                  <div className="lg:col-span-3">
                     <Textarea
                       label="Descrição"
                       rows={4}
