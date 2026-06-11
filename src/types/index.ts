@@ -45,7 +45,7 @@ export interface ImovelImagemRow {
 
 export interface ImovelRow {
   id: string
-  empresa_id: string
+  empresa_id: string | null
   corretor_id: string | null
   captador_id: string | null
   proprietario_id: string | null
@@ -219,7 +219,7 @@ export interface PropertyListFilters {
 }
 
 export interface ImovelInsert {
-  empresa_id: string
+  empresa_id: string | null
   proprietario_id?: string | null
   captador_id?: string | null
   titulo: string

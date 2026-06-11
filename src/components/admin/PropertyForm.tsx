@@ -32,11 +32,32 @@ const statusOptions = (
 ).map(([value, label]) => ({ value, label }))
 
 const PLACEHOLDER_IMAGE = '/placeholder-imovel.jpg'
+const MAX_IMAGE_SIZE_MB = 10
+
+type ViaCepResponse = {
+  cep?: string
+  logradouro?: string
+  bairro?: string
+  localidade?: string
+  uf?: string
+  erro?: boolean
+}
 
 function fallbackImage(e: SyntheticEvent<HTMLImageElement>) {
   const target = e.currentTarget
   if (target.src.endsWith(PLACEHOLDER_IMAGE)) return
   target.src = PLACEHOLDER_IMAGE
+}
+
+function safeImagePreviewUrl(url: string | null | undefined) {
+  if (!url?.trim()) return PLACEHOLDER_IMAGE
+  try {
+    const parsed = new URL(url)
+    if (['http:', 'https:', 'blob:'].includes(parsed.protocol)) return url
+  } catch {
+    return PLACEHOLDER_IMAGE
+  }
+  return PLACEHOLDER_IMAGE
 }
 
 interface CaptadorOption {
@@ -57,6 +78,7 @@ export function PropertyForm() {
   const [imageUrlInput, setImageUrlInput] = useState('')
   const [serverError, setServerError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
+  const [cepStatus, setCepStatus] = useState<string | null>(null)
   const [captadores, setCaptadores] = useState<CaptadorOption[]>([])
   const [proprietarios, setProprietarios] = useState<ProprietarioRow[]>([])
   const [propertyEmpresaId, setPropertyEmpresaId] = useState<string | null>(null)
@@ -97,13 +119,72 @@ export function PropertyForm() {
     },
   })
   const cepValue = watch('cep') ?? ''
-  const hasCepForCoordinates = cepValue.replace(/\D/g, '').length >= 8
+  const cepDigits = cepValue.replace(/\D/g, '')
+  const hasCepForCoordinates = cepDigits.length >= 8
 
   useEffect(() => {
     if (hasCepForCoordinates) return
     setValue('latitude', null, { shouldDirty: true })
     setValue('longitude', null, { shouldDirty: true })
   }, [hasCepForCoordinates, setValue])
+
+  useEffect(() => {
+    if (cepDigits.length !== 8) {
+      setCepStatus(null)
+      return
+    }
+
+    const controller = new AbortController()
+    setCepStatus('Buscando endereço pelo CEP...')
+
+    fetch(`https://viacep.com.br/ws/${cepDigits}/json/`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Não foi possível consultar o CEP.')
+        return (await response.json()) as ViaCepResponse
+      })
+      .then((data) => {
+        if (data.erro) {
+          setCepStatus('CEP não encontrado. Preencha o endereço manualmente.')
+          return
+        }
+
+        if (data.localidade) {
+          setValue('cidade', data.localidade, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        if (data.bairro) {
+          setValue('bairro', data.bairro, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        if (data.logradouro) {
+          setValue('endereco', data.logradouro, {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+
+        const cidadeUf = [data.localidade, data.uf].filter(Boolean).join(' - ')
+        setCepStatus(
+          cidadeUf
+            ? `Endereço encontrado: ${cidadeUf}. Complete número e complemento, se necessário.`
+            : 'Endereço encontrado. Complete os dados que faltarem.',
+        )
+      })
+      .catch((error: Error) => {
+        if (error.name === 'AbortError') return
+        setCepStatus('Não foi possível buscar o CEP. Preencha manualmente.')
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [cepDigits, setValue])
 
   useEffect(() => {
     const supabase = createClient()
@@ -187,8 +268,24 @@ export function PropertyForm() {
   function onPickFiles(e: ChangeEvent<HTMLInputElement>) {
     const list = e.target.files
     if (!list?.length) return
-    const files = Array.from(list)
+    const selectedFiles = Array.from(list)
+    const files = selectedFiles.filter((file) => {
+      if (!file.type.startsWith('image/')) return false
+      return file.size <= MAX_IMAGE_SIZE_MB * 1024 * 1024
+    })
     setServerError(null)
+    if (!files.length) {
+      setServerError(
+        `Selecione apenas imagens de até ${MAX_IMAGE_SIZE_MB}MB cada.`,
+      )
+      e.target.value = ''
+      return
+    }
+    if (files.length < selectedFiles.length) {
+      setServerError(
+        `Alguns arquivos foram ignorados. Use apenas imagens de até ${MAX_IMAGE_SIZE_MB}MB.`,
+      )
+    }
     setNewFiles((prev) => [...prev, ...files])
     setUploadProgress(
       `${files.length} imagem(ns) selecionada(s). Clique em Salvar para concluir.`,
@@ -211,6 +308,14 @@ export function PropertyForm() {
       }
     } catch {
       setServerError('Informe uma URL de imagem válida.')
+      return
+    }
+
+    const alreadyAdded = [...manualImageUrls, ...existingImages.map((img) => img.url)]
+      .map((item) => item.trim().toLowerCase())
+      .includes(url.toLowerCase())
+    if (alreadyAdded) {
+      setServerError('Esta imagem já foi adicionada.')
       return
     }
 
@@ -491,6 +596,11 @@ export function PropertyForm() {
                   {...register('cep')}
                   error={errors.cep?.message}
                 />
+                {cepStatus ? (
+                  <p className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-muted sm:col-span-2 xl:col-span-4">
+                    {cepStatus}
+                  </p>
+                ) : null}
                 <Input label="Cidade" {...register('cidade')} error={errors.cidade?.message} />
                 <Input label="Bairro" {...register('bairro')} error={errors.bairro?.message} />
                 <div className="sm:col-span-2 xl:col-span-2">
@@ -757,7 +867,7 @@ export function PropertyForm() {
                       className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100"
                     >
                       <img
-                        src={img.url || PLACEHOLDER_IMAGE}
+                        src={safeImagePreviewUrl(img.url)}
                         alt=""
                         onError={fallbackImage}
                         className="size-full object-cover"
@@ -777,7 +887,7 @@ export function PropertyForm() {
                       className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100"
                     >
                       <img
-                        src={url || PLACEHOLDER_IMAGE}
+                        src={safeImagePreviewUrl(url)}
                         alt=""
                         onError={fallbackImage}
                         className="size-full object-cover"

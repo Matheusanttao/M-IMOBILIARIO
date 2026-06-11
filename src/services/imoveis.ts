@@ -56,6 +56,15 @@ function applySort(
   return query.order('created_at', { ascending: false })
 }
 
+function isPublicImageUrl(url: string) {
+  try {
+    const parsed = new URL(url)
+    return ['http:', 'https:'].includes(parsed.protocol)
+  } catch {
+    return false
+  }
+}
+
 export async function getEmpresaIdBySlug(slug: string): Promise<string | null> {
   const supabase = createClient()
   const { data, error } = await supabase
@@ -176,6 +185,14 @@ export async function fetchImovelBySlug(
   const { data, error } = await query.maybeSingle()
   if (error) throw error
   return data as ImovelRow | null
+}
+
+export async function incrementImovelVisualizacoes(id: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase.rpc('increment_imovel_visualizacoes', {
+    target_id: id,
+  })
+  if (error) throw error
 }
 
 export async function fetchImovelByIdForAdmin(id: string): Promise<ImovelRow | null> {
@@ -302,7 +319,17 @@ export async function replaceImovelImagens(
       is_capa: img.is_capa,
       ordem: img.ordem,
     }))
-    .filter((img) => img.url)
+    .filter((img) => img.url && isPublicImageUrl(img.url))
+    .filter(
+      (img, index, arr) =>
+        arr.findIndex((item) => item.url.toLowerCase() === img.url.toLowerCase()) ===
+        index,
+    )
+    .map((img, index) => ({
+      ...img,
+      is_capa: index === 0,
+      ordem: index,
+    }))
 
   if (!rows.length) return
 

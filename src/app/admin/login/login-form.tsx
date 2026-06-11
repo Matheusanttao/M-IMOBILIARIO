@@ -35,10 +35,11 @@ export function AdminLoginForm({ version }: { version: string }) {
     if (!saved) return
 
     try {
-      const parsed = JSON.parse(saved) as Partial<LoginFormValues>
-      if (parsed.email) setValue('email', parsed.email)
-      if (parsed.password) setValue('password', parsed.password)
-      setRememberLogin(Boolean(parsed.email || parsed.password))
+      const parsed = JSON.parse(saved) as Pick<Partial<LoginFormValues>, 'email'>
+      if (parsed.email) {
+        setValue('email', parsed.email)
+        setRememberLogin(true)
+      }
     } catch {
       window.localStorage.removeItem(REMEMBER_LOGIN_KEY)
     }
@@ -98,7 +99,7 @@ export function AdminLoginForm({ version }: { version: string }) {
     if (rememberLogin) {
       window.localStorage.setItem(
         REMEMBER_LOGIN_KEY,
-        JSON.stringify({ email: data.email, password: data.password }),
+        JSON.stringify({ email: data.email }),
       )
     } else {
       window.localStorage.removeItem(REMEMBER_LOGIN_KEY)
@@ -197,10 +198,10 @@ export function AdminLoginForm({ version }: { version: string }) {
                 />
                 <span>
                   <span className="block font-medium text-slate-700">
-                    Lembrar e-mail e senha
+                    Lembrar meu e-mail
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-400">
-                    Salvar neste navegador para preencher automaticamente.
+                    A senha fica por conta do gerenciador seguro do navegador.
                   </span>
                 </span>
               </label>

@@ -2,6 +2,17 @@ import { createClient } from '@/lib/supabase/client'
 import type { LeadRow } from '@/types'
 import { autoDistribuirLead } from '@/services/crm'
 
+const LEAD_STATUS_LABELS: Record<LeadRow['status'], string> = {
+  novo: 'Novo',
+  contato: 'Contato',
+  visita: 'Visita',
+  proposta: 'Proposta',
+  negociacao: 'Negociação',
+  contrato: 'Contrato',
+  convertido: 'Convertido',
+  perdido: 'Perdido',
+}
+
 async function scoreLead(input: {
   leadId: string
   nome: string
@@ -98,6 +109,31 @@ export async function updateLeadStatus(
   status: LeadRow['status'],
 ): Promise<void> {
   const supabase = createClient()
+  const { data: current, error: currentError } = await supabase
+    .from('leads')
+    .select('status')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (currentError) throw currentError
+  if (!current) throw new Error('Lead não encontrado.')
+  if (current.status === status) return
+
   const { error } = await supabase.from('leads').update({ status }).eq('id', id)
   if (error) throw error
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const from = LEAD_STATUS_LABELS[current.status as LeadRow['status']] ?? current.status
+  const to = LEAD_STATUS_LABELS[status] ?? status
+  const { error: historyError } = await supabase.from('lead_historico').insert({
+    lead_id: id,
+    usuario_id: user?.id ?? null,
+    tipo: 'sistema',
+    conteudo: `Status alterado de ${from} para ${to}.`,
+  })
+
+  if (historyError) throw historyError
 }

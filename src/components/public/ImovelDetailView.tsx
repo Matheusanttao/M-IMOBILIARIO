@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { useTenant } from '@/contexts/TenantContext'
 import { addFavorite } from '@/services/favoritos'
+import { incrementImovelVisualizacoes } from '@/services/imoveis'
 
 const envWa = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? ''
 
@@ -48,6 +49,18 @@ export function ImovelDetailView() {
   useEffect(() => {
     setPageUrl(typeof window !== 'undefined' ? window.location.href : '')
   }, [])
+
+  useEffect(() => {
+    if (!imovel?.id || typeof window === 'undefined') return
+
+    const key = `imovel_viewed:${imovel.id}`
+    if (window.sessionStorage.getItem(key)) return
+
+    window.sessionStorage.setItem(key, '1')
+    incrementImovelVisualizacoes(imovel.id).catch(() => {
+      window.sessionStorage.removeItem(key)
+    })
+  }, [imovel?.id])
 
   useEffect(() => {
     if (!imovel) return
