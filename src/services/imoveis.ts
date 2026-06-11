@@ -259,9 +259,14 @@ export async function updateImovel(
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
-    .single()
+    .maybeSingle()
 
   if (error) throw error
+  if (!data) {
+    throw new Error(
+      'Imóvel não encontrado ou sem permissão para atualizar. Aplique a migration 004_single_tenant_admin_writes.sql no Supabase.',
+    )
+  }
   return data as ImovelRow
 }
 

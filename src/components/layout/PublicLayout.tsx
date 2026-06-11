@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { ConfigBanner } from '@/components/layout/ConfigBanner'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { SiteChatbot } from '@/components/public/SiteChatbot'
+import { WhatsAppFloatingButton } from '@/components/public/WhatsAppFloatingButton'
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   return (
@@ -11,7 +11,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
-      <SiteChatbot />
+      <WhatsAppFloatingButton />
     </div>
   )
 }
