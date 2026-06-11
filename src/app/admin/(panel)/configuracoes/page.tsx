@@ -491,29 +491,29 @@ function AdminConfigPageInner() {
           </h2>
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-5">
-            <Input
-              label="Título da página"
-              placeholder="Sobre nós"
-              {...register('quem_somos_titulo')}
-              error={errors.quem_somos_titulo?.message}
-            />
-            <Input
-              label="Foto do Quem Somos"
-              type="url"
-              placeholder="https://..."
-              {...register('quem_somos_imagem_url')}
-              error={errors.quem_somos_imagem_url?.message}
-            />
-            <Textarea
-              label="Texto da página"
-              rows={7}
-              placeholder="Conte a história da imobiliária, diferenciais e forma de atendimento..."
-              {...register('quem_somos_texto')}
-              error={errors.quem_somos_texto?.message}
-            />
+              <Input
+                label="Título da página"
+                placeholder="Sobre nós"
+                {...register('quem_somos_titulo')}
+                error={errors.quem_somos_titulo?.message}
+              />
+              <Input
+                label="Foto do Quem Somos"
+                type="url"
+                placeholder="https://..."
+                {...register('quem_somos_imagem_url')}
+                error={errors.quem_somos_imagem_url?.message}
+              />
+              <Textarea
+                label="Texto da página"
+                rows={7}
+                placeholder="Conte a história da imobiliária, diferenciais e forma de atendimento..."
+                {...register('quem_somos_texto')}
+                error={errors.quem_somos_texto?.message}
+              />
             </div>
             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="space-y-4">
                 {quemSomosImagemUrl ? (
                   <img
                     src={quemSomosImagemUrl}
@@ -525,8 +525,8 @@ function AdminConfigPageInner() {
                     Sem imagem
                   </div>
                 )}
-                <div className="flex-1 sm:flex-none lg:flex-1">
-                  <label className="inline-flex cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90">
+                <div>
+                  <label className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary/90">
                     {uploadingQuemSomosImage
                       ? 'Enviando...'
                       : 'Selecionar imagem do PC'}
@@ -538,9 +538,9 @@ function AdminConfigPageInner() {
                       onChange={handleQuemSomosImageUpload}
                     />
                   </label>
-                  <p className="mt-2 text-sm text-muted">
-                    Você também pode colar uma URL acima. Ao selecionar do PC, a imagem é enviada
-                    e a URL é preenchida automaticamente.
+                  <p className="mt-2 text-xs leading-5 text-muted">
+                    Você pode colar uma URL ou selecionar uma imagem do computador.
+                    A URL será preenchida automaticamente após o envio.
                   </p>
                 </div>
               </div>

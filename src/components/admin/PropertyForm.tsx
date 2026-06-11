@@ -418,8 +418,8 @@ export function PropertyForm() {
                 </div>
               </div>
               <div className="p-5 sm:p-6">
-                <div className="grid gap-5 lg:grid-cols-4">
-                  <div className="lg:col-span-2">
+                <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                  <div>
                     <Input label="Título" {...register('titulo')} error={errors.titulo?.message} />
                   </div>
                   <Select
@@ -440,7 +440,7 @@ export function PropertyForm() {
                     {...register('finalidade')}
                     error={errors.finalidade?.message}
                   />
-                  <div className="lg:col-span-3">
+                  <div className="lg:col-span-4">
                     <Textarea
                       label="Descrição"
                       rows={4}

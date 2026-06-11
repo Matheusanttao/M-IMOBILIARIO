@@ -98,7 +98,7 @@ export function AdminSidebar() {
         </div>
         <div className="leading-none">
           <p className="text-[0.82rem] font-bold uppercase tracking-widest text-white">
-            M. Imobiliário
+            Painel Administrativo
           </p>
           <p className="mt-0.5 text-[0.6rem] uppercase tracking-[0.3em] text-white/40">
             Seja bem-vindo
