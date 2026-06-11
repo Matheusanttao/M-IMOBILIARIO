@@ -35,29 +35,29 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-white/10 bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-32 max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3 text-white">
+        <div className="mx-auto flex min-h-24 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:min-h-28 sm:px-6 lg:px-8">
+          <Link href="/" className="flex min-w-0 shrink-0 items-center gap-3 text-white">
             {logoUrl ? (
               <img
                 src={logoUrl}
                 alt={`Logo ${displayName}`}
                 width={260}
                 height={110}
-                className="h-24 w-auto max-w-[260px] object-contain sm:h-28"
+                className="h-16 w-auto max-w-[150px] object-contain sm:h-20 sm:max-w-[190px] xl:h-24 xl:max-w-[230px]"
               />
             ) : (
-              <span className="flex size-24 items-center justify-center rounded-2xl border border-accent/45 font-display text-3xl font-bold leading-none text-accent sm:size-28">
+              <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-accent/45 font-display text-2xl font-bold leading-none text-accent sm:size-20 sm:text-3xl">
                 {initials.slice(0, 2)}
               </span>
             )}
-            <span className="leading-none">
-              <span className="block font-display text-2xl font-semibold uppercase tracking-[0.22em] text-white">
+            <span className={cn('min-w-0 leading-none', logoUrl && 'hidden 2xl:block')}>
+              <span className="block max-w-[220px] truncate font-display text-lg font-semibold uppercase tracking-[0.16em] text-white 2xl:text-xl">
                 {displayName}
               </span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-7 lg:flex">
+          <nav className="hidden min-w-0 items-center gap-5 xl:flex">
             {nav.map((item) => {
               const active =
                 item.href === '/'
@@ -88,7 +88,7 @@ export function Header() {
             ) : null}
           </nav>
 
-          <div className="hidden items-center gap-5 lg:flex">
+          <div className="hidden shrink-0 items-center gap-4 xl:flex">
             {phoneDigits ? (
               <a
                 href={`tel:+${phoneDigits}`}
@@ -108,7 +108,7 @@ export function Header() {
 
           <button
             type="button"
-            className="rounded-lg p-2 text-white lg:hidden"
+            className="shrink-0 rounded-lg p-2 text-white xl:hidden"
             aria-label="Abrir menu"
             onClick={() => setOpen(true)}
           >

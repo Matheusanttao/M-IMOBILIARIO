@@ -293,23 +293,29 @@ function AdminConfigPageInner() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <div>
-        <h1 className="font-display text-3xl font-bold text-primary">
-          Configurações
-        </h1>
-        <p className="mt-2 text-muted">
-          Dados gerais da empresa e personalização visual.
-        </p>
+    <div className="w-full space-y-8">
+      <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+        <div className="bg-gradient-to-br from-primary via-slate-900 to-slate-800 px-5 py-6 text-white sm:px-7 sm:py-7">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-accent">
+            Painel do site
+          </p>
+          <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">
+            Configurações
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/70">
+            Ajuste os dados da imobiliária, identidade visual, páginas
+            institucionais e links exibidos no site público.
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {/* Dados Principais */}
-        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Dados Principais
           </h2>
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             <Input
               label="Nome da empresa"
               {...register('nome')}
@@ -351,10 +357,10 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Endereço */}
-        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">Endereço</h2>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="sm:col-span-2 xl:col-span-2">
               <Input
                 label="Endereço"
                 placeholder="Rua, número, complemento"
@@ -378,11 +384,11 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Visual */}
-        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Identidade Visual
           </h2>
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2">
             <div className="space-y-1.5 text-left">
               <label className="block text-sm font-medium text-slate-700">
                 Cor Primária
@@ -417,7 +423,7 @@ function AdminConfigPageInner() {
                 />
               </div>
             </div>
-            <div className="sm:col-span-2">
+            <div className="lg:col-span-2">
               <Input
                 label="URL do Logo (100x100 px)"
                 type="url"
@@ -450,7 +456,7 @@ function AdminConfigPageInner() {
             </div>
 
             {/* Preview */}
-            <div className="sm:col-span-2">
+            <div className="lg:col-span-2">
               <p className="mb-2 text-sm font-medium text-slate-700">
                 Pré-visualização
               </p>
@@ -479,11 +485,12 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Quem Somos */}
-        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Quem Somos
           </h2>
-          <div className="space-y-5">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-5">
             <Input
               label="Título da página"
               placeholder="Sobre nós"
@@ -497,20 +504,28 @@ function AdminConfigPageInner() {
               {...register('quem_somos_imagem_url')}
               error={errors.quem_somos_imagem_url?.message}
             />
+            <Textarea
+              label="Texto da página"
+              rows={7}
+              placeholder="Conte a história da imobiliária, diferenciais e forma de atendimento..."
+              {...register('quem_somos_texto')}
+              error={errors.quem_somos_texto?.message}
+            />
+            </div>
             <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 {quemSomosImagemUrl ? (
                   <img
                     src={quemSomosImagemUrl}
                     alt="Prévia do Quem Somos"
-                    className="h-28 w-full rounded-xl border border-slate-200 bg-white object-cover sm:w-40"
+                    className="h-48 w-full rounded-xl border border-slate-200 bg-white object-cover"
                   />
                 ) : (
-                  <div className="flex h-28 w-full items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white text-sm text-muted sm:w-40">
+                  <div className="flex h-48 w-full items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white text-sm text-muted">
                     Sem imagem
                   </div>
                 )}
-                <div className="flex-1">
+                <div className="flex-1 sm:flex-none lg:flex-1">
                   <label className="inline-flex cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90">
                     {uploadingQuemSomosImage
                       ? 'Enviando...'
@@ -530,13 +545,6 @@ function AdminConfigPageInner() {
                 </div>
               </div>
             </div>
-            <Textarea
-              label="Texto da página"
-              rows={7}
-              placeholder="Conte a história da imobiliária, diferenciais e forma de atendimento..."
-              {...register('quem_somos_texto')}
-              error={errors.quem_somos_texto?.message}
-            />
           </div>
           <p className="mt-2 text-sm text-muted">
             Este conteúdo aparece na aba Sobre nós do site público.
@@ -544,7 +552,7 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Política de Privacidade */}
-        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Política de Privacidade
           </h2>
@@ -569,7 +577,7 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Links */}
-        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Links do Site
           </h2>
@@ -628,7 +636,7 @@ function AdminConfigPageInner() {
         </section>
 
         {/* Redes Sociais */}
-        <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-md">
+        <section className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-primary">
             Redes Sociais
           </h2>

@@ -416,7 +416,7 @@ export function PropertyForm() {
           </p>
         ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.85fr)]">
+        <div className="space-y-6">
           <div className="space-y-6">
             <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
               <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
@@ -618,7 +618,7 @@ export function PropertyForm() {
             </section>
           </div>
 
-          <aside className="space-y-6 xl:sticky xl:top-24 xl:self-start">
+          <aside className="space-y-6">
             <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
               <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
                 <div className="flex items-center gap-3">
@@ -665,7 +665,7 @@ export function PropertyForm() {
                   error={errors.proprietario_id?.message}
                 />
 
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <Input
                     label="Participação (%)"
                     type="number"
@@ -752,7 +752,7 @@ export function PropertyForm() {
                   </p>
                 ) : null}
 
-                <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto] xl:grid-cols-1 2xl:grid-cols-[1fr_auto]">
+                <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto]">
                   <Input
                     label="URL da imagem"
                     type="url"
@@ -771,7 +771,7 @@ export function PropertyForm() {
                 </div>
 
                 {imageCount ? (
-                  <div className="mt-5 grid max-h-72 grid-cols-3 gap-2 overflow-y-auto pr-1">
+                  <div className="mt-5 grid max-h-72 grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-6">
                   {existingImages.map((img) => (
                     <div
                       key={img.id}

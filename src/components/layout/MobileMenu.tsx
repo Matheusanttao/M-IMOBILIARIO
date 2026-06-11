@@ -40,23 +40,23 @@ export function MobileMenu({
         onClick={onClose}
       />
       <div className="absolute right-0 top-0 flex h-full w-[min(100%,22rem)] flex-col border-l border-white/10 bg-background p-6 shadow-2xl">
-        <div className="mb-8 flex items-center justify-between">
-          <Link href="/" onClick={onClose} className="flex items-center gap-3 text-white">
+        <div className="mb-8 flex items-start justify-between gap-3">
+          <Link href="/" onClick={onClose} className="flex min-w-0 items-center gap-3 text-white">
             {logoUrl ? (
               <img
                 src={logoUrl}
                 alt={`Logo ${empresaNome}`}
                 width={220}
                 height={96}
-                className="h-20 w-auto max-w-[220px] object-contain"
+                className="h-16 w-auto max-w-[170px] object-contain"
               />
             ) : (
-              <span className="flex size-20 items-center justify-center rounded-2xl border border-accent/45 font-display text-3xl font-bold leading-none text-accent">
+              <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-accent/45 font-display text-2xl font-bold leading-none text-accent">
                 {initials.slice(0, 2)}
               </span>
             )}
-            <span className="leading-none">
-              <span className="block font-display text-xl font-semibold uppercase tracking-[0.2em]">
+            <span className={logoUrl ? 'hidden' : 'min-w-0 leading-none'}>
+              <span className="block truncate font-display text-lg font-semibold uppercase tracking-[0.16em]">
                 {empresaNome}
               </span>
             </span>
