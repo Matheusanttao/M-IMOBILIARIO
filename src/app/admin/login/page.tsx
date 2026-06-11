@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { AdminLoginForm } from '@/app/admin/login/login-form'
+import packageJson from '../../../../package.json'
 
 export default function AdminLoginPage() {
   return (
@@ -10,7 +11,7 @@ export default function AdminLoginPage() {
         </div>
       }
     >
-      <AdminLoginForm />
+      <AdminLoginForm version={packageJson.version} />
     </Suspense>
   )
 }
