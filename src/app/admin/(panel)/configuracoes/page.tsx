@@ -518,7 +518,7 @@ function AdminConfigPageInner() {
                   <img
                     src={quemSomosImagemUrl}
                     alt="Prévia do Quem Somos"
-                    className="h-48 w-full rounded-xl border border-slate-200 bg-white object-cover"
+                    className="max-h-64 w-full rounded-xl border border-slate-200 bg-white object-contain"
                   />
                 ) : (
                   <div className="flex h-48 w-full items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white text-sm text-muted">

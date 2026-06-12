@@ -21,11 +21,13 @@ export default function SobrePage() {
       </p>
       <h1 className="mt-3 font-display text-3xl font-bold text-white">{title}</h1>
       {quemSomosImagemUrl ? (
-        <img
-          src={quemSomosImagemUrl}
-          alt={title}
-          className="mt-8 aspect-[16/9] w-full rounded-2xl object-cover"
-        />
+        <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-card">
+          <img
+            src={quemSomosImagemUrl}
+            alt={title}
+            className="max-h-[560px] w-full object-contain"
+          />
+        </div>
       ) : null}
       <div className="mt-4 space-y-4 leading-relaxed text-white/65">
         {text.split(/\n{2,}/).map((paragraph) => (
