@@ -175,7 +175,7 @@ create index if not exists proprietarios_empresa_id_idx on public.proprietarios 
 
 create table if not exists public.imoveis (
   id uuid primary key default gen_random_uuid(),
-  empresa_id uuid not null references public.empresas (id) on delete cascade,
+  empresa_id uuid references public.empresas (id) on delete cascade,
   proprietario_id uuid references public.proprietarios (id) on delete set null,
   corretor_id uuid references auth.users (id) on delete set null,
   captador_id uuid references auth.users (id) on delete set null,
@@ -1279,3 +1279,167 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_auth_user();
+
+-- ============================================================
+-- Consolidado single-tenant e melhorias posteriores
+-- ============================================================
+-- Este bloco incorpora as antigas migrations:
+-- 002_add_imoveis_cep.sql
+-- 003_single_tenant_imoveis.sql
+-- 004_single_tenant_admin_writes.sql
+-- 005_notify_new_leads.sql
+-- 006_increment_imovel_visualizacoes.sql
+
+-- Mantem compatibilidade ao aplicar o script sobre bancos existentes.
+alter table public.imoveis
+  add column if not exists cep text;
+
+alter table public.imoveis
+  alter column empresa_id drop not null;
+
+drop policy if exists imoveis_select_public on public.imoveis;
+create policy imoveis_select_public on public.imoveis
+for select using (
+  status = 'disponivel'
+  or public.is_master()
+  or empresa_id = public.user_empresa_id()
+);
+
+drop policy if exists imovel_imagens_select on public.imovel_imagens;
+create policy imovel_imagens_select on public.imovel_imagens
+for select using (
+  exists (
+    select 1 from public.imoveis i
+    where i.id = imovel_id
+    and (
+      i.status = 'disponivel'
+      or public.is_master()
+      or i.empresa_id = public.user_empresa_id()
+    )
+  )
+);
+
+drop policy if exists leads_insert_anon on public.leads;
+create policy leads_insert_anon on public.leads
+for insert with check (
+  imovel_id is null
+  or exists (
+    select 1 from public.imoveis i
+    where i.id = imovel_id
+    and i.status = 'disponivel'
+  )
+);
+
+drop policy if exists imoveis_write_staff on public.imoveis;
+create policy imoveis_write_staff on public.imoveis
+for insert with check (
+  public.is_master()
+  or public.user_role() in ('admin', 'gerente', 'corretor', 'captador')
+);
+
+drop policy if exists imoveis_update_staff on public.imoveis;
+create policy imoveis_update_staff on public.imoveis
+for update using (
+  public.is_master()
+  or public.user_role() in ('admin', 'gerente', 'corretor', 'captador')
+) with check (
+  public.is_master()
+  or public.user_role() in ('admin', 'gerente', 'corretor', 'captador')
+);
+
+drop policy if exists imoveis_delete_staff on public.imoveis;
+create policy imoveis_delete_staff on public.imoveis
+for delete using (
+  public.is_master()
+  or public.user_role() in ('admin', 'gerente')
+);
+
+drop policy if exists imovel_imagens_write on public.imovel_imagens;
+create policy imovel_imagens_write on public.imovel_imagens
+for all using (
+  exists (
+    select 1 from public.imoveis i
+    where i.id = imovel_id
+    and (
+      public.is_master()
+      or public.user_role() in ('admin', 'gerente', 'corretor', 'captador')
+    )
+  )
+) with check (
+  exists (
+    select 1 from public.imoveis i
+    where i.id = imovel_id
+    and (
+      public.is_master()
+      or public.user_role() in ('admin', 'gerente', 'corretor', 'captador')
+    )
+  )
+);
+
+create or replace function public.notify_new_lead()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  target_empresa_id uuid;
+begin
+  target_empresa_id := new.empresa_id;
+
+  if target_empresa_id is null then
+    select id
+      into target_empresa_id
+      from public.empresas
+      where ativa
+      order by created_at asc
+      limit 1;
+  end if;
+
+  if target_empresa_id is null then
+    return new;
+  end if;
+
+  insert into public.notificacoes (
+    empresa_id,
+    usuario_id,
+    tipo,
+    titulo,
+    mensagem,
+    link
+  )
+  values (
+    target_empresa_id,
+    null,
+    'lead',
+    'Novo lead recebido',
+    concat('Lead de ', coalesce(new.name, 'cliente'), ' recebido pelo site.'),
+    concat('/admin/leads/', new.id)
+  );
+
+  return new;
+end;
+$$;
+
+drop trigger if exists notify_new_lead on public.leads;
+create trigger notify_new_lead
+after insert on public.leads
+for each row execute function public.notify_new_lead();
+
+create or replace function public.increment_imovel_visualizacoes(target_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.imoveis
+  set visualizacoes = visualizacoes + 1
+  where id = target_id
+    and status = 'disponivel';
+end;
+$$;
+
+revoke all on function public.increment_imovel_visualizacoes(uuid) from public;
+grant execute on function public.increment_imovel_visualizacoes(uuid) to anon;
+grant execute on function public.increment_imovel_visualizacoes(uuid) to authenticated;
